@@ -1,6 +1,8 @@
-# SoftwareEngineering SS 2022
+## sbt project compiled with Scala 3
 
-Mensch ärgere Dich nicht Spiel in Scala
-Sommersemester 2022
+### Usage
 
-[![codecov](https://codecov.io/gh/LeopoldSappler/se_madn/branch/main/graph/badge.svg?token=OKJSHNIBFA)](https://codecov.io/gh/LeopoldSappler/se_madn)
+This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+
+For more information on the sbt-dotty plugin, see the
+[scala3-example-project](https://github.com/scala/scala3-example-project/blob/main/README.md).
