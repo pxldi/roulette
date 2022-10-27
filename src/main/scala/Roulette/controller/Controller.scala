@@ -6,8 +6,8 @@ import util.Observable
 import util.UndoManager
 
 
-  case class Controller(var field: Field) extends Observable:
-  val undoManager = new UndoManager[Field]
+  case class Controller(player : Array[Int]) extends Observable:
+  val undoManager = new UndoManager
   def doAndPublish(doThis: Move => Field, move: Move) =
     field = doThis(move)
     notifyObservers
@@ -18,4 +18,4 @@ import util.UndoManager
   def undo: Field = undoManager.undoStep(field)
   def redo: Field = undoManager.redoStep(field)
   override def toString = field.toString
-  */
+*/
