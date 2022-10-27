@@ -1,4 +1,4 @@
-package Roulette
+package de.htwg.se.tictactoe.util
 
 trait Command[T]:
   def noStep(t: T): T
