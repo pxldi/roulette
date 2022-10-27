@@ -1,46 +1,114 @@
-package Roulette.aview
+/*
+val playercount : Int = readLine("Anzahl Spieler: " ).toInt
+println("Spieleranzahl: " + playercount )
 
-import Roulette.controller
-import Roulette.controller.Controller
-import Roulette.model.Player
-import Roulette.model.PlayerBuilder
-import Roulette.util.Observer
+val r = new Random()
+val randZahl : Int = r.nextInt(37)
 
-import scala.io.StdIn.readLine
-import scala.util.Random
+println()
+println("Willst du eine Zahl (z), gerade oder ungerade (g), Farbe (f), \n" +
+  "2 Zahlen (2n), 3 Zahlen (3n), 4 Zahlen (4n), 6 Zahlen (6n), \n"+
+  "1-18 (1h), 9-36 (2h), 1-12 (12), 13-24 (24), 25-36 (36), \n" +
+  "Reihe 1 4 7 X+3 bis 34 (r1), Reihe 2 5 8 X+3,bis 35 (r2), Reihe 3 6 9 12,X+3 bis 36 (r3) setzen?")
 
-case class TUI(controller: Controller) extends Observer: //player: Player
 
-  controller.add(this)
-  controller.setupGameState()
-  val r = new Random()
-  inputLoop()
-  val bet: Int = 0
+readLine() match
+  case "z" =>
 
-  def inputLoop(): Unit = { //Interpreter Pattern
-    for (playerIndex <- 0 until controller.getPlayerCount()) {
-      println()
-      print(controller.actualPlayer(playerIndex))
+    val einsatzZahl : Int = readLine("Auf welches Feld wollen sie ihren Einsatz setzen? ").toInt
 
-      val bet = readLine("How much money do you want to bet: ").toInt
-      val randomNumber = r.nextInt(37)
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
 
-      val tempPlayer = new PlayerBuilder
-      tempPlayer.withRandZahl(randomNumber).withPlayerIndex(playerIndex).withEinsatz(bet)
-      println("\nDo you want to place a bet on a number (n), on odd or even (o) or on a color (c)? \n")
+    if(randZahl == einsatzZahl)
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+  case "g" =>
+    println("Willst du auf gerade(g) oder ungerade(u) setzten? ")
+    readLine() match
+      case "g" =>
+        println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+        if(randZahl % 2 == 0)
+          println("Sie haben gewonnen")
+        else
+          println("Sie haben leider nicht gewonnen")
 
-      readLine() match
-        case "n" =>
-          print(controller.num(tempPlayer))
-          println()
-        case "o" =>
-          print(controller.evenOdd(tempPlayer))
-          println()
-        case "c" =>
-          print(controller.colour(tempPlayer))
-          println()
-    }
-    inputLoop()
-  }
+      case "u" =>
+        println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+        if(randZahl % 2 != 0)
+          println("Sie haben gewonnen")
+        else
+          println("Sie haben leider nicht gewonnen")
+  case "f" =>
+    var roteZahlen = Array(1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36)
+    var schwarzeZahlen = Array(2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35)
 
-  override def update: Unit = println(controller.stateToString())
+    println("Willst du auf rot(r) oder schwarz(s) setzten? ")
+    readLine() match
+      case "r" =>
+        println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+        if(roteZahlen.contains(randZahl))
+          println("Sie haben gewonnen")
+        else
+          println("Sie haben leider nicht gewonnen")
+
+      case "s" =>
+        println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+        if(schwarzeZahlen.contains(randZahl))
+          println("Sie haben gewonnen")
+        else
+          println("Sie haben leider nicht gewonnen")
+
+  case "1h" =>
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(randZahl <= 18)
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+
+  case "2h" =>
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(randZahl <= 36 && randZahl >= 19)
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+
+  case "12" =>
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(randZahl <= 12)
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+  case "24" =>
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(randZahl <= 24 && randZahl >= 13)
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+  case "36" =>
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(randZahl <= 36 && randZahl >= 25)
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+  case "r1" =>
+    var r1Zahlen = Array(1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34)
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(r1Zahlen.contains(randZahl))
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+  case "r2" =>
+    var r2Zahlen = Array(2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35)
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(r2Zahlen.contains(randZahl))
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen")
+  case "r3" =>
+    var r3Zahlen = Array(3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36)
+    println("Beim Drehen vom Roulette kam eine: " + randZahl + " heraus")
+    if(r3Zahlen.contains(randZahl))
+      println("Sie haben gewonnen")
+    else
+      println("Sie haben leider nicht gewonnen") */
