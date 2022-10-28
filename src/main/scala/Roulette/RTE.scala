@@ -11,8 +11,8 @@ import scala.util.Random
     println("Roulette \n")
     val playercount : Int = readLine("Anzahl Spieler: " ).toInt
     println("Spieleranzahl: " + playercount)
-    val player : Player = Player(playercount)
-    val tui = TUI(player)
+    //val player : Player = Player(playercount)
+    val tui = TUI(Player(playercount))
     //val controller = new Controller(Player(playercount))
 //val tui = new Roulette.aview.TUI(controller)
 

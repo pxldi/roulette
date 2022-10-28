@@ -6,7 +6,8 @@ import org.scalatest.wordspec.AnyWordSpec
 class PlayerSpec extends AnyWordSpec{
 
   "player Count" in {
-    val player = new Player(2)
-    player.playerCount should be (2)
+    val player : Player = Player(2)
+    player.players(0) = 100
+    player.players(0).toString() should be ("100")
   }
 }
