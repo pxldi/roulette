@@ -1,11 +1,13 @@
 package Roulette.aview
 
+//import Roulette.controller.Controller
 import Roulette.model.Player
+//import Roulette.util.Observer
 
 import scala.io.StdIn.readLine
 import scala.util.Random
 
-case class TUI(player: Player) {
+case class TUI(player: Player) { //extends Observer
   inputLoop()
 
   def inputLoop(): Unit = {
@@ -14,14 +16,12 @@ case class TUI(player: Player) {
       println("Spieler " + playerIndex + " ist dran:")
       println("Ihr Geld " + player.players(playerIndex))
       val einsatz: Int = readLine("Ihr Einsatz: ").toInt
-      //player.players(playerIndex) = player.players(playerIndex) - einsatz
-      //println("Ihr Geld aktuell " + player.players(playerIndex))
       val r = new Random()
       val randZahl: Int = r.nextInt(37)
       println()
       println("Willst du eine Zahl (z), gerade oder ungerade (g), Farbe (f), \n" +
         //"2 Zahlen (2n), 3 Zahlen (3n), 4 Zahlen (4n), 6 Zahlen (6n), \n" +
-        "1-18 (1h), 9-36 (2h), 1-12 (12), 13-24 (24), 25-36 (36), \n" +
+        "1-18 (1h), 19-36 (2h), 1-12 (12), 13-24 (24), 25-36 (36), \n" +
         "Reihe 1 4 7 X+3 bis 34 (r1), Reihe 2 5 8 X+3,bis 35 (r2), Reihe 3 6 9 12,X+3 bis 36 (r3) setzen?")
       readLine() match
         case "z" =>
@@ -103,6 +103,7 @@ case class TUI(player: Player) {
 
   def win(playerIndex: Int, einsatz: Int, winRate: Int): Unit = {
     val gewinn: Int = einsatz * winRate
+    //Controller.setMoney(playerIndex, gewinn)
     player.players(playerIndex) = player.players(playerIndex) + gewinn
 
     println("Sie haben " + gewinn + " gewonnen")
