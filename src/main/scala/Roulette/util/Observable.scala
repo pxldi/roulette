@@ -1,4 +1,4 @@
-package de.htwg.se.tictactoe
+package Roulette
 package util
 
 trait Observer:

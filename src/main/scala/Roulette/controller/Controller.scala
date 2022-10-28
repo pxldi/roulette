@@ -1,21 +1,23 @@
-/*package de.htwg.se.tictactoe
-package controller
+/*package Roulette.controller
 
-import util.Command
-import util.Observable
-import util.UndoManager
+import Roulette.model.Player
+import Roulette.util.Observable
+import Roulette.{Command, UndoManager}
 
-
-  case class Controller(player : Array[Int]) extends Observable:
+class Controller(player: Player) extends Observable :
   val undoManager = new UndoManager
-  def doAndPublish(doThis: Move => Field, move: Move) =
-    field = doThis(move)
+
+  def setMoney(playerIndex: Int, money: Int) =
+    //field = doThis
+    player.players(playerIndex) = player.players(playerIndex) + gewinn
     notifyObservers
-  def doAndPublish(doThis: => Field) =
-    field = doThis
-    notifyObservers
-  def put(move: Move): Field = undoManager.doStep(field, PutCommand(move))
-  def undo: Field = undoManager.undoStep(field)
-  def redo: Field = undoManager.redoStep(field)
-  override def toString = field.toString
+
+  def bet(move: Move): Field =
+    undoManager.doStep(field, PutCommand(move))
+
+    def undo: Field =
+      undoManager.undoStep(field)
+
+  def redo: Field =
+    undoManager.redoStep(field)
 */
