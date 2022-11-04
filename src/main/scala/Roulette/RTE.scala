@@ -5,7 +5,6 @@ import Roulette.model.Player
 
 import javax.swing.plaf.TextUI
 import scala.io.StdIn.readLine
-import scala.util.Random
 
 @main def main(): Unit =
     println("Roulette \n")
