@@ -29,5 +29,13 @@ class TUISpec extends AnyWordSpec with should.Matchers {
         }
         assert(stream.toString() contains "Quitting...")
     }
+
+    "" in {
+      val stream = new java.io.ByteArrayOutputStream()
+        Console.withOut(stream) {
+        tui.processInput("asfuguaksgf")
+        }
+        assert(stream.toString() contains "Wrong Input")
+    }
   }
 }
