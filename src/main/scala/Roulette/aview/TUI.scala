@@ -1,6 +1,7 @@
 package Roulette.aview
 
 class TUI {
+    
     def processInput(input: String): Unit = {
         input match
             case "h" =>
@@ -9,5 +10,7 @@ class TUI {
                 println("Bet")
             case "q" =>
                 println("Quitting...")
+            case _ =>
+                println("Wrong Input")
     }
 }
