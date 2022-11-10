@@ -1,14 +1,16 @@
 package Roulette.aview
 
-//import Roulette.controller.Controller
+import Roulette.controller.Controller
 import Roulette.model.Player
 import Roulette.model.PlayerBuilder
-//import Roulette.util.Observer
+import Roulette.util.Observer
 
 import scala.io.StdIn.readLine
 import scala.util.Random
 
-case class TUI(player: Player) { //extends Observer
+case class TUI(player: Player) extends Observer:
+  override def update = ???
+
   inputLoop()
   val einsatz: Int = 0
   val r: Int = 0
@@ -131,4 +133,4 @@ case class TUI(player: Player) { //extends Observer
             zurück = zurück.concat(loose(player.playerIndex, player.einsatz))
       zurück
     }
-}
+
