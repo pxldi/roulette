@@ -25,14 +25,25 @@ class Controller(val player: Player) extends Observable {
     //Controller.setMoney(playerIndex, gewinn)
     player.players(playerIndex) = player.players(playerIndex) + gewinn
     val res = "Sie haben " + gewinn + " gewonnen. Ihr Geld aktuell: " + player.players(playerIndex)
+    notifyObservers
     res
   }
 
   def loose(playerIndex: Int, einsatz: Int): String = {
     player.players(playerIndex) = player.players(playerIndex) - einsatz
     val res = "Sie haben leider nicht gewonnen und ihren Einsatz von " + einsatz + " verloren. Ihr Geld aktuell: " + player.players(playerIndex)
+    notifyObservers
     res
   }
+
+  def getPlayerCount(): Int = {
+    player.playerCount
+  }
+
+  def stateToString(): String = {
+    val res = "Test Update"
+    res
+   }
 
   def num(tempPlayer: PlayerBuilder): String = {
     NumExpression(tempPlayer).interpret()
