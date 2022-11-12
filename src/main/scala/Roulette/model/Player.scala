@@ -4,14 +4,14 @@ import scala.io.StdIn.readLine
 
 case class Player(val playerCount: Int) {
   var players = new Array[Int](playerCount)
-  playerStartMoney(players)
-  def playerStartMoney(players : Array[Int]): Array[Int] = {
+  playerStartingMoney(players)
+  def playerStartingMoney(players : Array[Int]): Array[Int] = {
     for (playerIndex <- 0 until playerCount)
-      val money: Int = readLine("Spieler " + playerIndex + " Startkapital: ").toInt
+      val money: Int = readLine("Player " + playerIndex + ": Starting money: $").toInt
       players(playerIndex) = money
       
     for (playerIndex <- 0 until playerCount)
-      println("Spieler " + playerIndex + " Startkapital: " + players(playerIndex))
+      println("Player " + playerIndex + ": Starting money: $" + players(playerIndex))
     players
   }
   players
@@ -20,19 +20,19 @@ case class Player(val playerCount: Int) {
 
 // Fluent Interface
 class PlayerBuilder:
-  var randZahl: Int = 0
+  var randomNumber: Int = 0
   var playerIndex: Int = 0
-  var einsatz: Int = 0
+  var bet: Int = 0
 
-  def withRandZahl(randZahl: Int): PlayerBuilder = {
-    this.randZahl = randZahl
+  def withRandZahl(randomNumber: Int): PlayerBuilder = {
+    this.randomNumber = randomNumber
     this
   }
   def withPlayerIndex(playerIndex: Int): PlayerBuilder = {
     this.playerIndex = playerIndex
     this
   }
-  def withEinsatz(einsatz: Int): PlayerBuilder = {
-    this.einsatz = einsatz
+  def withEinsatz(bet: Int): PlayerBuilder = {
+    this.bet = bet
     this
   }
