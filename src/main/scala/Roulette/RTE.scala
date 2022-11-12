@@ -1,15 +1,18 @@
 package Roulette
 
-import aview.TUI
+import Roulette.aview.TUI
+import Roulette.aview.GUI
+import Roulette.controller.Controller
+import Roulette.model.Player
+
+import javax.swing.plaf.TextUI
 import scala.io.StdIn.readLine
+import scala.util.Random
 
-object RTE {
-    val tui = new TUI
-    @main def main(): Unit =
-        var input: String = " "
-        while(input != "q") {
-            input = readLine()
-            tui.processInput(input)
-        }
-}
-
+@main def main(): Unit =
+    println("Roulette \n")
+    val playercount : Int = readLine("Anzahl Spieler: " ).toInt
+    val player = Player(playercount)
+    val controller = Controller(player)
+    val tui = TUI(controller)
+    val swingGui = GUI()
