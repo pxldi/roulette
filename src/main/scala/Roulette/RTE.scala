@@ -14,7 +14,7 @@ import scala.util.Random
     val playercount : Int = readLine("Anzahl Spieler: " ).toInt
     val player = Player(playercount)
     val controller = Controller(player)
-    val tui = TUI(player)
+    val tui = TUI(controller)
     val swingGui = GUI()
 
 

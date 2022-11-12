@@ -9,17 +9,18 @@ import Roulette.util.Observer
 import scala.io.StdIn.readLine
 import scala.util.Random
 
-case class TUI(player: Player) extends Observer: //player: Player
-  override def update = ???
+case class TUI(controller: Controller) extends Observer: //player: Player
+
+  controller.add(this)
 
   inputLoop()
   val einsatz: Int = 0
   val r: Int = 0
   val randZahl: Int = 0
   def inputLoop(): Unit = { //Interpreter Pattern
-    for (playerIndex <- 0 until player.playerCount) {
+    for (playerIndex <- 0 until controller.getPlayerCount()) {
       println()
-      print(Controller(player).actualPlayer(playerIndex))
+      print(controller.actualPlayer(playerIndex))
 
       val einsatz = readLine("Ihr Einsatz: ").toInt
       val r = new Random()
@@ -30,21 +31,20 @@ case class TUI(player: Player) extends Observer: //player: Player
 
       println()
 
-      println("Willst du eine Zahl (z), gerade oder ungerade (g), Farbe (f), \n")
+      println("Willst du eine Zahl (z), gerade oder ungerade (g) oder eine Farbe (f) setzen? \n")
 
       readLine() match
         case "z" =>
-          print(Controller(player).num(tempPlayer))
+          print(controller.num(tempPlayer))
           println()
         case "g" =>
-          print(Controller(player).evenOdd(tempPlayer))
+          print(controller.evenOdd(tempPlayer))
           println()
         case "f" =>
-          print(Controller(player).colour(tempPlayer))
+          print(controller.colour(tempPlayer))
           println()
     }
     inputLoop()
   }
 
-
-
+  override def update: Unit = println(controller.stateToString())
