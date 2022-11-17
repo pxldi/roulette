@@ -8,6 +8,16 @@ import scala.io.StdIn.readLine
 
 class Controller(val player: Player) extends Observable {
 
+  var gameState: GameState = null
+
+  def setupGameState(): Unit = {
+    changeGameState(new BetGameState(this))
+  }
+
+  def changeGameState(gameState: GameState): Unit = {
+    this.gameState = gameState
+  }
+
   def actualPlayer(playerIndex: Int): String = {
     val retval = "Turn of player " + playerIndex + "\n" +
       "Money in the bank: $" + player.players(playerIndex) + "\n"

@@ -12,6 +12,7 @@ import scala.util.Random
 case class TUI(controller: Controller) extends Observer: //player: Player
 
   controller.add(this)
+  controller.setupGameState()
   val r = new Random()
   inputLoop()
   val bet: Int = 0
@@ -26,10 +27,7 @@ case class TUI(controller: Controller) extends Observer: //player: Player
 
       val tempPlayer = new PlayerBuilder
       tempPlayer.withRandZahl(randomNumber).withPlayerIndex(playerIndex).withEinsatz(bet)
-
-      println()
-
-      println("Do you want to place a bet on a number (n), on odd or even (o) or on a color (c)? \n")
+      println("\nDo you want to place a bet on a number (n), on odd or even (o) or on a color (c)? \n")
 
       readLine() match
         case "n" =>
