@@ -1,6 +1,7 @@
 package Roulette.controller
 
-import main.scala.Roulette.controller.Controller
+import Roulette.controller.Controller
+import Roulette.model.Player
 import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
 
