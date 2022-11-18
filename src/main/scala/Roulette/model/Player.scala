@@ -3,6 +3,7 @@ package Roulette.model
 import scala.io.StdIn.readLine
 
 case class Player(val playerCount: Int) {
+
   var players = new Array[Int](playerCount)
   playerStartingMoney(players)
   
@@ -13,6 +14,7 @@ case class Player(val playerCount: Int) {
       
     for (playerIndex <- 0 until playerCount)
       println("Player " + playerIndex + ": Starting money: $" + players(playerIndex))
+
     players
   }
   players
@@ -21,6 +23,7 @@ case class Player(val playerCount: Int) {
 
 // Fluent Interface
 class PlayerBuilder:
+
   var randomNumber: Int = 0
   var playerIndex: Int = 0
   var bet: Int = 0
@@ -37,5 +40,6 @@ class PlayerBuilder:
 
   def withEinsatz(bet: Int): PlayerBuilder = {
     this.bet = bet
+
     this
   }

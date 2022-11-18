@@ -8,6 +8,7 @@ import scala.io.StdIn.readLine
 
 class Controller(val player: Player) extends Observable {
 
+
   var gameState: GameState = null
 
   def setupGameState(): Unit = {
@@ -52,6 +53,7 @@ class Controller(val player: Player) extends Observable {
   def stateToString(): String = {
     val retval = "Test Update"
     retval
+
    }
 
   def num(tempPlayer: PlayerBuilder): String = {
