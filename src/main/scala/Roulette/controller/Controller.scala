@@ -8,32 +8,42 @@ import scala.io.StdIn.readLine
 
 class Controller(val player: Player) extends Observable {
 
+
+  var gameState: GameState = null
+
+  def setupGameState(): Unit = {
+    changeGameState(new BetGameState(this))
+  }
+
+  def changeGameState(gameState: GameState): Unit = {
+    this.gameState = gameState
+  }
+
   def actualPlayer(playerIndex: Int): String = {
-    var current = "Spieler " + playerIndex + " ist dran: \n" +
-      "Ihr Geld " + player.players(playerIndex) + "\n"
+    val retval = "Turn of player " + playerIndex + "\n" +
+      "Money in the bank: $" + player.players(playerIndex) + "\n"
     notifyObservers
-    current
+    retval
   }
 
-  def result(randZahl: Int): String = {
-    val res = "Beim Drehen vom Roulette kam eine: " + randZahl + " heraus. "
-    res
+  def result(randomNumber: Int): String = {
+    val retval = "The spin result is: " + randomNumber + ". "
+    retval
   }
 
-  def win(playerIndex: Int, einsatz: Int, winRate: Int): String = {
-    val gewinn: Int = einsatz * winRate
-    //Controller.setMoney(playerIndex, gewinn)
-    player.players(playerIndex) = player.players(playerIndex) + gewinn
-    val res = "Sie haben " + gewinn + " gewonnen. Ihr Geld aktuell: " + player.players(playerIndex)
+  def win(playerIndex: Int, bet: Int, winRate: Int): String = {
+    val wonMoney: Int = bet * winRate
+    player.players(playerIndex) = player.players(playerIndex) + wonMoney
+    val retvalue = "You won " + wonMoney + " . You now have $" + player.players(playerIndex) + " in the bank."
     notifyObservers
-    res
+    retvalue
   }
 
-  def loose(playerIndex: Int, einsatz: Int): String = {
-    player.players(playerIndex) = player.players(playerIndex) - einsatz
-    val res = "Sie haben leider nicht gewonnen und ihren Einsatz von " + einsatz + " verloren. Ihr Geld aktuell: " + player.players(playerIndex)
+  def lose(playerIndex: Int, bet: Int): String = {
+    player.players(playerIndex) = player.players(playerIndex) - bet
+    val retval = "You lost your bet of $" + bet + ". You now have $" + player.players(playerIndex) + " in the bank."
     notifyObservers
-    res
+    retval
   }
 
   def getPlayerCount(): Int = {
@@ -41,8 +51,9 @@ class Controller(val player: Player) extends Observable {
   }
 
   def stateToString(): String = {
-    val res = "Test Update"
-    res
+    val retval = "Test Update"
+    retval
+
    }
 
   def num(tempPlayer: PlayerBuilder): String = {
@@ -62,65 +73,65 @@ class Controller(val player: Player) extends Observable {
   }
 
   class NumExpression(player: PlayerBuilder) extends Expression {
-    var zurück = ""
+    var retval = ""
 
     def interpret(): String = {
-      val num = readLine("Auf welches Feld wollen sie ihren Einsatz setzen? ").toInt
+      val num = readLine("On which number do you want to place your bet? (0-36) ").toInt
 
-      zurück = zurück.concat(result(player.randZahl))
-      if (player.randZahl == num)
-        zurück = zurück.concat(win(player.playerIndex, player.einsatz, 36))
+      retval = retval.concat(result(player.randomNumber))
+      if (player.randomNumber == num)
+        retval = retval.concat(win(player.playerIndex, player.bet, 36))
       else
-        zurück = zurück.concat(loose(player.playerIndex, player.einsatz))
-      zurück
+        retval = retval.concat(lose(player.playerIndex, player.bet))
+      retval
     }
   }
 
   class EOExpression(player: PlayerBuilder) extends Expression {
-    var zurück = ""
+    var retval = ""
 
     def interpret(): String = {
-      zurück = zurück.concat(result(player.randZahl))
-      println("Willst du auf gerade(g) oder ungerade(u) setzten? ")
+      retval = retval.concat(result(player.randomNumber))
+      println("Do you want to bet on odd (o) or even (e) ? ")
       readLine() match
-        case "g" =>
-          if (player.randZahl % 2 == 0)
-            zurück = zurück.concat(win(player.playerIndex, player.einsatz, 2))
+        case "e" =>
+          if (player.randomNumber % 2 == 0)
+            retval = retval.concat(win(player.playerIndex, player.bet, 2))
           else
-            zurück = zurück.concat(loose(player.playerIndex, player.einsatz))
+            retval = retval.concat(lose(player.playerIndex, player.bet))
 
-        case "u" =>
-          if (player.randZahl % 2 != 0)
-            zurück = zurück.concat(win(player.playerIndex, player.einsatz, 2))
+        case "o" =>
+          if (player.randomNumber % 2 != 0)
+            retval = retval.concat(win(player.playerIndex, player.bet, 2))
           else
-            zurück = zurück.concat(loose(player.playerIndex, player.einsatz))
-      zurück
+            retval = retval.concat(lose(player.playerIndex, player.bet))
+      retval
     }
   }
 
   class ColourExpression(player: PlayerBuilder) extends Expression {
-    var zurück = ""
+    var retval = ""
 
-    var roteZahlen = Array(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
-    var schwarzeZahlen = Array(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
+    var redNumbers = Array(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+    var blackNumbers = Array(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
     def interpret(): String = {
 
-        zurück = zurück.concat(result(player.randZahl))
-        println("Willst du auf rot(r) oder schwarz(s) setzten? ")
+        retval = retval.concat(result(player.randomNumber))
+        println("Do you want to bet on red (r) or black (b) ? ")
         readLine() match
           case "r" =>
-            if (roteZahlen.contains(player.randZahl))
-              zurück = zurück.concat(win(player.playerIndex, player.einsatz, 2))
+            if (redNumbers.contains(player.randomNumber))
+              retval = retval.concat(win(player.playerIndex, player.bet, 2))
             else
-              zurück = zurück.concat(loose(player.playerIndex, player.einsatz))
+              retval = retval.concat(lose(player.playerIndex, player.bet))
 
-          case "s" =>
-            result(player.randZahl)
-            if (schwarzeZahlen.contains(player.randZahl))
-              zurück = zurück.concat(win(player.playerIndex, player.einsatz, 2))
+          case "b" =>
+            result(player.randomNumber)
+            if (blackNumbers.contains(player.randomNumber))
+              retval = retval.concat(win(player.playerIndex, player.bet, 2))
             else
-              zurück = zurück.concat(loose(player.playerIndex, player.einsatz))
-        zurück
+              retval = retval.concat(lose(player.playerIndex, player.bet))
+        retval
     }
   }
 }
