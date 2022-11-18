@@ -1,6 +1,7 @@
 package Roulette.controller
 
 import main.scala.Roulette.controller.Controller
+import org.scalatest.{Matchers, WordSpec}
 
 class controllerSpec extends WordSpec with Matchers {
   "A controller" should{
