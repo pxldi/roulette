@@ -1,6 +1,7 @@
 package Roulette
 
-import Roulette.aview.TUI
+
+import Roulette.aview.GUI
 import Roulette.controller.Controller
 import Roulette.model.Player
 
