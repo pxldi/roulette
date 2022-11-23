@@ -1,7 +1,6 @@
 package Roulette
 
 import Roulette.aview.TUI
-import Roulette.aview.GUI
 import Roulette.controller.Controller
 import Roulette.model.Player
 
@@ -10,11 +9,8 @@ import scala.io.StdIn.readLine
 import scala.util.Random
 
 @main def main(): Unit =
-    println("Roulette \n")
-    val playercount : Int = readLine("Anzahl Spieler: " ).toInt
-    val player = Player(playercount)
-    val controller = Controller(player)
+    println("Welcome to Roulette! \n")
+    val playerCount : Int = readLine("How many players are playing? >>>" ).toInt
+    val startingMoney : Int = readLine("How much money should each player start with? >>>$" ).toInt
+    val controller = Controller(playerCount, startingMoney)
     val tui = TUI(controller)
-    val swingGui = GUI()
-
-
