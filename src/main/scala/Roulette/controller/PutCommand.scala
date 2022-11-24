@@ -2,9 +2,9 @@
 package de.htwg.se.tictactoe
 package controller
 
-import model.Field
-import model.Move
-import model.Stone
+import Roulette.model.Field
+import Roulette.model.Move
+import Roulette.model.Stone
 import util.Command
 import util.UndoManager
 
