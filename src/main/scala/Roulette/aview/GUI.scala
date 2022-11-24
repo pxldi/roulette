@@ -1,4 +1,4 @@
-package Roulette.aview
+/*package Roulette.aview
 
 import Roulette.model.*
 import Roulette.util.Observer
@@ -203,3 +203,5 @@ class GUI() { //extends Frame with Observer
   }
 
 }
+
+ */
