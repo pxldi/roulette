@@ -1,11 +1,10 @@
 package Roulette.aview
 
-import Roulette.controller
-import Roulette.controller.Controller
 import Roulette.model.Player
-import Roulette.controller.State
 import Roulette.util.Observer
 import Roulette.model.Bet
+import Roulette.controller.Controller
+import Roulette.controller.State
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.VectorBuilder
@@ -51,6 +50,8 @@ case class TUI(controller: Controller) extends Observer: //player: Player
             print("<<<Your bet was placed!>>>\n")
           case "d" =>
             controller.changeState(State.RESULT)
+          //case "z" => controller.redo
+          //case "y" => controller.undo
           
           controller.updatePlayer(player_index, bet.bet_amount, false)
       }

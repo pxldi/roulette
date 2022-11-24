@@ -1,8 +1,6 @@
 package Roulette.aview
 
-import Roulette.controller
-import Roulette.controller.Controller
-import Roulette.model.{Player, PlayerBuilder}
+import Roulette.model.*
 import Roulette.util.Observer
 
 import scala.swing.*
@@ -84,7 +82,7 @@ class GUI() { //extends Frame with Observer
         contents += new BoxPanel(Orientation.Horizontal) {
           contents += Button("Safe Spieler Anzahl") {
             val player = Player(playerCountLine.text.toInt)
-            val controller = Controller(player)
+            //val controller = controller(player, startMoneyLine)
           }
         }
         contents += new BoxPanel(Orientation.Horizontal) {
