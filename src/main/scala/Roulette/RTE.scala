@@ -2,8 +2,9 @@ package Roulette
 
 
 import Roulette.aview.GUI
-import Roulette.controller.Controller
+import Roulette.aview.TUI
 import Roulette.model.Player
+import Roulette.controller.Controller
 
 import javax.swing.plaf.TextUI
 import scala.io.StdIn.readLine
