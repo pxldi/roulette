@@ -1,20 +1,21 @@
 package Roulette.controller
 
 import Roulette.controller
-import Roulette.model.{Player, Bet}
+import Roulette.model.{Bet, Player}
 import Roulette.util.Observable
 import Roulette.controller.State._
 
+
+import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn.readLine
 import scala.util.Random
-import scala.collection.immutable.VectorBuilder
 
 class Controller(playerCount: Int, startingMoney: Int) extends Observable {
 
   var state: State = IDLE
   val r = new Random()
   var players = Vector[Player]()
-  
+
   def setupPlayers(): Unit = {
     val vc = VectorBuilder[Player]
     for (player_index <- 0 until playerCount) {
@@ -97,6 +98,7 @@ class Controller(playerCount: Int, startingMoney: Int) extends Observable {
     ColorExpression(bet).interpret()
   }
 
+  //Interpreter Pattern
   trait Expression {
     def interpret(): String
   }
@@ -138,19 +140,59 @@ class Controller(playerCount: Int, startingMoney: Int) extends Observable {
     var redNumbers = Array(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
     var blackNumbers = Array(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
     def interpret(): String = {
-        bet.bet_color match
-          case "r" =>
-            if (redNumbers.contains(bet.random_number))
-              retval = retval.concat(win(bet.player_index, bet.bet_amount, 2))
-            else
-              retval = retval.concat(lose(bet.player_index, bet.bet_amount))
+      bet.bet_color match
+        case "r" =>
+          if (redNumbers.contains(bet.random_number))
+            retval = retval.concat(win(bet.player_index, bet.bet_amount, 2))
+          else
+            retval = retval.concat(lose(bet.player_index, bet.bet_amount))
 
-          case "b" =>
-            if (blackNumbers.contains(bet.random_number))
-              retval = retval.concat(win(bet.player_index, bet.bet_amount, 2))
-            else
-              retval = retval.concat(lose(bet.player_index, bet.bet_amount))
-        retval
+        case "b" =>
+          if (blackNumbers.contains(bet.random_number))
+            retval = retval.concat(win(bet.player_index, bet.bet_amount, 2))
+          else
+            retval = retval.concat(lose(bet.player_index, bet.bet_amount))
+      retval
     }
   }
 }
+
+
+/*
+  trait Command[T]:
+    def noStep(t: T): T
+    def doStep(t: T): T
+    def undoStep(t: T): T
+    def redoStep(t: T): T
+
+  private var undoCommand = new UndoCommand()
+
+  def undo = undoCommand.undoStep
+  def redo = undoCommand.redoStep
+
+  class UndoCommand {
+    private var undoStack: List[Command[Player]] = Nil
+    private var redoStack: List[Command[Player]] = Nil
+
+    def undoStep(t: T): T =
+      undoStack match {
+        case Nil => t
+        case head :: stack => {
+          val result = head.undoStep(t)
+          undoStack = stack
+          redoStack = head :: redoStack
+          result
+        }
+      }
+
+    def redoStep(t: T): T =
+      redoStack match {
+        case Nil => t
+        case head :: stack => {
+          val result = head.redoStep(t)
+          redoStack = stack
+          undoStack = head :: undoStack
+          result
+        }
+      }
+  } */
