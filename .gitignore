@@ -1,6 +1,8 @@
 # macOS
 .DS_Store
 
+null/*
+
 # sbt specific
 dist/*
 target/
