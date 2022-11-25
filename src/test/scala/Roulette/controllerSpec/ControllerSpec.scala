@@ -1,7 +1,7 @@
 package Roulette.controller
 
 import Roulette.controller.State.{IDLE, State}
-import Roulette.model.Bet
+import Roulette.model.{Player, Bet}
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.VectorBuilder
@@ -16,24 +16,34 @@ import org.scalactic.TripleEquals.unconstrainedEquality
 import scala.Console.in
 
 class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEquals {
-  var state: State = IDLE
+  
+  "Controller" should {
+    val playerCount : Int = 1
+    val startingMoney : Int = 100
+    val controller = Controller(playerCount, startingMoney)
 
-  val playerCount : Int = 1
-  val startingMoney : Int = 100
-  val controller = Controller(playerCount, startingMoney)
-  val vc = VectorBuilder[Bet]
-  val bets = controller.calculateBets(vc.result())
-  controller.setupPlayers()
-
-  "A State" should {
-    "have a method to print the State" in {
-      val st = State.printState(state)
-      val expected = ""
-      st should ===(expected)
+    "setup the players" in {
+      controller.setupPlayers()
+      val vc = VectorBuilder[Player]
+      for (player_index <- 0 until 1) {
+        vc.addOne(Player(100))
+      }
+      val expected = vc.result()
+      val result = controller.players
+      result should ===(expected)
     }
   }
 
   "A Controller" should {
+    var state: State = IDLE
+
+    val playerCount : Int = 1
+    val startingMoney : Int = 100
+    val controller = Controller(playerCount, startingMoney)
+    val vc = VectorBuilder[Bet]
+    val bets = controller.calculateBets(vc.result())
+    controller.setupPlayers()
+
     "have a method to calculate Bets" in {
       val expected = 100
       for (s <- bets) {
@@ -68,6 +78,7 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
       val expected = ""
       controller.printState() should ===(expected)
     }
+
     /*"have a method to get Num"in {
       for (bet <- bets) {
         val num = controller.num(bet)
