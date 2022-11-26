@@ -18,11 +18,10 @@ import scala.Console.in
 class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEquals {
   
   "Controller" should {
-    val playerCount : Int = 1
-    val startingMoney : Int = 100
-    val controller = Controller(playerCount, startingMoney)
-
     "setup the players" in {
+      val playerCount : Int = 1
+      val startingMoney : Int = 100
+      val controller = Controller(playerCount, startingMoney)
       controller.setupPlayers()
       val vc = VectorBuilder[Player]
       for (player_index <- 0 until 1) {
@@ -32,6 +31,24 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
       val result = controller.players
       result.size should be(expected.size)
       result(0).getAvailableMoney() should be(expected(0).getAvailableMoney())
+    }
+
+    "have the ability to add money to a player" in {
+      val playerCount : Int = 1
+      val startingMoney : Int = 100
+      val controller = Controller(playerCount, startingMoney)
+      controller.setupPlayers()
+      controller.updatePlayer(0, 100, true)
+      controller.players(0).getAvailableMoney() should be(200)
+    }
+
+    "have the ability to subtract money from a player" in {
+      val playerCount : Int = 1
+      val startingMoney : Int = 100
+      val controller = Controller(playerCount, startingMoney)
+      controller.setupPlayers()
+      controller.updatePlayer(0, 100, false)
+      controller.players(0).getAvailableMoney() should be(0)
     }
   }
 
