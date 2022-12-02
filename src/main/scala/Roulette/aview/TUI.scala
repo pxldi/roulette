@@ -9,7 +9,7 @@ import Roulette.controller.State
 import scala.io.StdIn.readLine
 import scala.collection.immutable.VectorBuilder
 
-case class TUI(controller: Controller) extends Observer: //player: Player
+case class TUI(controller: Controller) extends Observer:
 
   val vc = VectorBuilder[Bet]
   controller.add(this)

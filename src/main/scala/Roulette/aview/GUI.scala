@@ -1,13 +1,18 @@
-/*package Roulette.aview
+package Roulette.aview
 
+import Roulette.controller.{Controller, State}
 import Roulette.model.*
 import Roulette.util.Observer
 
 import scala.swing.*
 import scala.swing.Action.NoAction.title
 import scala.swing.event.*
+import scala.collection.immutable.VectorBuilder
 
-class GUI() { //extends Frame with Observer
+class GUI(controller: Controller) extends Observer { //extends Frame with Observer
+  val vc = VectorBuilder[Bet]
+  controller.add(this)
+  controller.setupPlayers()
 
   def update: Unit = {
     /*if (controller.bankmoney <= 0) {
@@ -47,15 +52,6 @@ class GUI() { //extends Frame with Observer
             //update
           })
         }
-        contents += new Menu("Edit") {
-          contents += new MenuItem(Action("Undo") {
-            //controller.undo
-          })
-          contents += new MenuItem(Action("Redo") {
-            //controller.redo
-            //update
-          })
-        }
         contents += new Menu("Options") {
           contents += new MenuItem(Action("read") {
             //val js = new FileIO
@@ -75,113 +71,124 @@ class GUI() { //extends Frame with Observer
 
       contents = new BoxPanel(Orientation.Vertical) {
         contents += new Label("\n")
-        contents += new BoxPanel(Orientation.Horizontal) {
-          contents += playerCountLine
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Spieler Anzahl")
-        }
-        contents += new BoxPanel(Orientation.Horizontal) {
-          contents += Button("Safe Spieler Anzahl") {
-            val player = Player(playerCountLine.text.toInt)
-            //val controller = controller(player, startMoneyLine)
-          }
-        }
+        contents += new Label("\n")
         contents += new BoxPanel(Orientation.Horizontal) {
           contents += statusline
           border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Status")
           border = Swing.EmptyBorder(10, 10, 10, 10)
         }
         contents += new Label("\n")
-        contents += new BoxPanel(Orientation.Horizontal) {
-          contents += startMoneyLine
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Sart Geld")
-        }
-        contents += new BoxPanel(Orientation.Horizontal) {
-          contents += Button("Safe Start Geld") {
-            //controller.undo
-          }
-        }
-        contents += new BoxPanel(Orientation.Horizontal) {
-          contents += new Label("\n")
-          contents += einsatzLine
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Einsatz")
-        }
         contents += new Label("\n")
 
         contents += new BoxPanel(Orientation.Horizontal) {
           contents += result
         }
-
+        var actualPlayer = 0
         contents += new BoxPanel(Orientation.Horizontal) {
 
+          contents += Button("Player1") {
+            statusline.text = ("Player1 available money: $" + controller.players(0).getAvailableMoney())
+            actualPlayer = 0
+          }
+
+          contents += Button("Player2") {
+            statusline.text = ("Player2 available money: $" + controller.players(1).getAvailableMoney())
+            actualPlayer = 1
+          }
+          contents += Button("Player3") {
+            statusline.text = ("Player3 available money: $" + controller.players(2).getAvailableMoney())
+            actualPlayer = 2
+          }
+
+          contents += Button("Player4") {
+            statusline.text = ("Player4 available money: $" + controller.players(3).getAvailableMoney())
+            actualPlayer = 3
+          }
+          contents += Button("Player5") {
+            statusline.text = ("Player5 available money: $" + controller.players(4).getAvailableMoney())
+            actualPlayer = 4
+          }
+          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Choose Player")
+        }
+        var actualBet = 0
+        val bet = new Bet
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += new Label("\n")
+          contents += einsatzLine
+          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Bet")
+        }
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += Button("Safe Bet Money") {
+            actualBet = einsatzLine.text.toInt
+            statusline.text = ("Bet: " + einsatzLine.text)
+          }
+        }
+        contents += new Label("\n")
+
+        contents += new BoxPanel(Orientation.Horizontal) {
+          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Bet options")
+
           contents += Button("Even") {
-            /*bet = "Even"
-            controller.changeBet(bet)
-            oldMoney = controller.bankmoney
-            controller.set(controller.bankmoney)
-            newMoney = controller.bankmoney
-            if (oldMoney > newMoney) {
-              result.text_=("You lost")
-            } else if (newMoney > oldMoney) {
-              result.text_=("You won")
+            val randomNumber = controller.generateRandomNumber()
+            controller.changeState(State.BET)
+            vc.clear()
+
+            bet.withBetType("o").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withOddOrEven("e")
+            vc.addOne(bet)
+            controller.changeState(State.RESULT)
+            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+
+            val bets = controller.calculateBets(vc.result())
+            for (s <- bets) {
+              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
             }
-            repaint()
-            update */
           }
 
           contents += Button("Odd") {
-            /*bet = "Odd"
-            controller.changeBet(bet)
-            oldMoney = controller.bankmoney
-            controller.set(controller.bankmoney)
-            newMoney = controller.bankmoney
-            if (oldMoney > newMoney) {
-              result.text_=("You lost")
-            } else if (newMoney > oldMoney) {
-              result.text_=("You won")
+            val randomNumber = controller.generateRandomNumber()
+            controller.changeState(State.BET)
+            vc.clear()
+
+            bet.withBetType("o").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withOddOrEven("o")
+            vc.addOne(bet)
+            controller.changeState(State.RESULT)
+            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+
+            val bets = controller.calculateBets(vc.result())
+            for (s <- bets) {
+              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
             }
-            update*/
           }
           contents += Button("Black") {
-            /*bet = "Black"
-            controller.changeBet(bet)
-            oldMoney = controller.bankmoney
-            controller.set(controller.bankmoney)
-            newMoney = controller.bankmoney
-            if (oldMoney > newMoney) {
-              result.text_=("You lost")
-            } else if (newMoney > oldMoney) {
-              result.text_=("You won")
-            }
-            update*/
-          }
+            val randomNumber = controller.generateRandomNumber()
+            controller.changeState(State.BET)
+            vc.clear()
 
+            bet.withBetType("c").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withColor("b")
+            vc.addOne(bet)
+            controller.changeState(State.RESULT)
+            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+
+            val bets = controller.calculateBets(vc.result())
+            for (s <- bets) {
+              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
+            }
+          }
           contents += Button("Red") {
-            /*bet = "Red"
-            controller.changeBet(bet)
-            oldMoney = controller.bankmoney
-            controller.set(controller.bankmoney)
-            newMoney = controller.bankmoney
-            if (oldMoney > newMoney) {
-              result.text_=("You lost")
-            } else if (newMoney > oldMoney) {
-              result.text_=("You won")
+            val randomNumber = controller.generateRandomNumber()
+            controller.changeState(State.BET)
+            vc.clear()
+
+            bet.withBetType("c").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withColor("r")
+            vc.addOne(bet)
+            controller.changeState(State.RESULT)
+            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+
+            val bets = controller.calculateBets(vc.result())
+            for (s <- bets) {
+              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
             }
-            update*/
           }
-          contents += Button("Green") {
-            /*bet = "Green"
-            controller.changeBet(bet)
-            oldMoney = controller.bankmoney
-            controller.set(controller.bankmoney)
-            newMoney = controller.bankmoney
-            if (oldMoney > newMoney) {
-              result.text_=("You lost")
-            } else if (newMoney > oldMoney) {
-              result.text_=("You won")
-            }
-            update*/
-          }
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Bet options")
         }
 
         contents += new Label("\n")
@@ -203,5 +210,3 @@ class GUI() { //extends Frame with Observer
   }
 
 }
-
- */

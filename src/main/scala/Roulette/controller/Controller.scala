@@ -55,7 +55,7 @@ class Controller(playerCount: Int, startingMoney: Int) extends Observable {
   def win(playerIndex: Int, bet: Int, winRate: Int): String = {
     val won_money: Int = bet * winRate
     val new_money: Int = players(playerIndex).getAvailableMoney() + won_money
-    updatePlayer(playerIndex, new_money, true)
+    updatePlayer(playerIndex, won_money, true)
     val retvalue = "Player " + (playerIndex + 1) + " won their bet of $" + won_money + ". They now have $" + players(playerIndex).getAvailableMoney() + " available."
     notifyObservers
     retvalue

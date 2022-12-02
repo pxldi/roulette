@@ -68,14 +68,28 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
       val expected = ""
       controller.printState() should ===(expected)
     }
-    /*"have a method to get Num"in {
-      for (bet <- bets) {
-        val num = controller.num(bet)
-        val expected = 1
-        num should ===(expected)
-      }
-    }*/
-    //TODO Color, EvenOdd, Num, Interpreter
+    "have a method to decide between the colours" in {
+      val bet = new Bet
+      bet.withBetType("c").withRandomNumber(12).withPlayerIndex(0).withBetAmount(20).withColor("r")
+      val colour = controller.color(bet)
+      val expected = "Player 1 won their bet of $40. They now have $520 available."
+      colour should ===(expected)
+    }
+    "have a method to decide between the number" in {
+      val bet = new Bet
+      bet.withBetType("n").withRandomNumber(12).withPlayerIndex(0).withBetAmount(20).withBetNumber(12)
+      val num = controller.num(bet)
+      val expected = "Player 1 won their bet of $720. They now have $1760 available."
+      num should ===(expected)
+    }
+    "have a method to decide between even and odd" in {
+      val bet = new Bet
+      bet.withBetType("o").withRandomNumber(12).withPlayerIndex(0).withBetAmount(20).withBetNumber(12)
+      val evenOdd = controller.num(bet)
+      val expected = "Player 1 won their bet of $720. They now have $4240 available."
+      evenOdd should ===(expected)
+    }
+    //TODO Interpreter
 
   }
 }
