@@ -5,5 +5,5 @@ class Player(available_money: Int) {
     this.available_money
   }
   
-  override def toString(): String = available_money.toString()
+  //override def toString(): String = available_money.toString()
 }

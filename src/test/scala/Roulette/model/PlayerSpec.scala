@@ -26,19 +26,13 @@ class PlayerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTriple
   val vc = VectorBuilder[Bet]
   val bets = controller.calculateBets(vc.result())
 
-  var players = Vector[Player]()
   controller.setupPlayers()
 
   "A Player" should {
     "have a method to get his available Money" in {
-      /*val money = players(0).getAvailableMoney()
+      val money = controller.players(0).getAvailableMoney()
       val expected = 100
-      money should ===(expected)*/
-    }
-  }
-  "A Bet" should {
-    "have a method to get Bettype" in {
-
+      money should ===(expected)
     }
   }
 }

@@ -1,4 +1,4 @@
-package Roulette
+/*package Roulette
 
 trait Command[T]:
   def noStep(t: T): T
@@ -31,4 +31,4 @@ class UndoManager[T]:
         undoStack = head :: undoStack
         result
       }
-    }
+    }*/
