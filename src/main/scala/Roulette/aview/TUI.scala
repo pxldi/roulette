@@ -2,6 +2,7 @@ package Roulette.aview
 
 import Roulette.model.Player
 import Roulette.util.Observer
+import Roulette.util.Event
 import Roulette.model.Bet
 import Roulette.controller.Controller
 import Roulette.controller.State
@@ -11,10 +12,24 @@ import scala.collection.immutable.VectorBuilder
 
 case class TUI(controller: Controller) extends Observer:
 
+  override def update(idx: Int, e: Event): Unit = {
+    e match
+        case Event.QUIT => println("Quitting")
+        case Event.PLAY =>  println("Player" + (idx+1))
+                            println("Your actual Money is: " + controller.players(idx).getAvailableMoney())
+                            println("Game State: " + controller.getState())
+  }
+
   val vc = VectorBuilder[Bet]
   controller.add(this)
   controller.setupPlayers()
-  inputLoop()
+
+  val cliThread = new Thread(() =>
+    inputLoop()
+      System.exit(0)
+  )
+  cliThread.setDaemon(true)
+  cliThread.start()
 
   def inputLoop(): Unit = {
     val randomNumber = controller.generateRandomNumber()
@@ -27,7 +42,7 @@ case class TUI(controller: Controller) extends Observer:
         print("\nTurn of player " + (player_index + 1) + "\n" + "Available money: $" + controller.players(player_index).getAvailableMoney() + "\n")
 
         val bet = new Bet
-        val bet_type = readLine("\nDo you want to place a bet on a number (n), on odd or even (o) or on a color (c)? If one of the players types (d), the betting phase will stop. >>>")
+        val bet_type = readLine("\nDo you want to place a bet on a number (n), on odd or even (o) or on a color (c)? If one of the players types (d), the betting phase will stop.>>>")
 
         bet_type match
           case "n" =>
@@ -54,6 +69,7 @@ case class TUI(controller: Controller) extends Observer:
           //case "y" => controller.undo
           
           controller.updatePlayer(player_index, bet.bet_amount, false)
+          update(player_index, Event.PLAY)
       }
     }
     println(controller.printState())
@@ -64,5 +80,3 @@ case class TUI(controller: Controller) extends Observer:
     }
     inputLoop()
   }
-
-  override def update: Unit = println("")

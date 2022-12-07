@@ -1,6 +1,7 @@
 package Roulette.aview
 
 import Roulette.controller.{Controller, State}
+import Roulette.util.Event
 import Roulette.model.*
 import Roulette.util.Observer
 
@@ -14,8 +15,8 @@ class GUI(controller: Controller) extends Observer { //extends Frame with Observ
   controller.add(this)
   controller.setupPlayers()
 
-  def update: Unit = {
-    /*if (controller.bankmoney <= 0) {
+  /*def update(idx: Int): Unit = {
+    if (controller.bankmoney <= 0) {
       result.text_=("^+.+^ GAME OVER ^+.+^")
       repaint()
       Thread.sleep(5000)
@@ -24,20 +25,25 @@ class GUI(controller: Controller) extends Observer { //extends Frame with Observ
     statusline.text = (">.> " + controller.gameStatus.toString + " <.<")
     nameLine.text_=(controller.name)
     moneyLine.text_=(controller.bankmoney.toString)
-    repaint() */
+    repaint()
+  } */
+  override def update(index: Int, e: Event): Unit = {
+    e match
+      case Event.QUIT => println("Quitting")
+      case Event.PLAY =>
+        statusline.text = ("Player" + (index+1) + " Available Money: " + controller.players(index).getAvailableMoney() + " State: "+ controller.getState().toString)
   }
+  title = "Roulette"
+
+  val statusline = new Label("Status")
+  val playerCountLine = new TextField("Anzahl Spieler", 10)
+  val startMoneyLine = new TextField("1000", 4)
+  val einsatzLine = new TextField("100", 4)
+  var result = new Label("")
+  var oldMoney = 0
+  var newMoney = 0
 
   new Frame {
-    title = "Roulette"
-
-    val statusline = new Label(">.> Status <.<")
-    val playerCountLine = new TextField("Anzahl Spieler", 10)
-    val nameLine = new TextField("Name", 10)
-    val startMoneyLine = new TextField("1000", 4)
-    val einsatzLine = new TextField("100", 4)
-    var result = new Label("")
-    var oldMoney = 0
-    var newMoney = 0
 
     def frame = new MainFrame {
 
@@ -137,6 +143,7 @@ class GUI(controller: Controller) extends Observer { //extends Frame with Observ
             vc.addOne(bet)
             controller.changeState(State.RESULT)
             controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+            update(actualPlayer, Event.PLAY)
 
             val bets = controller.calculateBets(vc.result())
             for (s <- bets) {
@@ -153,6 +160,7 @@ class GUI(controller: Controller) extends Observer { //extends Frame with Observ
             vc.addOne(bet)
             controller.changeState(State.RESULT)
             controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+            update(actualPlayer, Event.PLAY)
 
             val bets = controller.calculateBets(vc.result())
             for (s <- bets) {
@@ -168,6 +176,7 @@ class GUI(controller: Controller) extends Observer { //extends Frame with Observ
             vc.addOne(bet)
             controller.changeState(State.RESULT)
             controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+            update(actualPlayer, Event.PLAY)
 
             val bets = controller.calculateBets(vc.result())
             for (s <- bets) {
@@ -183,6 +192,7 @@ class GUI(controller: Controller) extends Observer { //extends Frame with Observ
             vc.addOne(bet)
             controller.changeState(State.RESULT)
             controller.updatePlayer(actualPlayer, bet.bet_amount, false)
+            update(actualPlayer, Event.PLAY)
 
             val bets = controller.calculateBets(vc.result())
             for (s <- bets) {

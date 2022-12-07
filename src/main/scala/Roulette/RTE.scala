@@ -15,5 +15,6 @@ import scala.util.Random
     val playerCount : Int = readLine("How many players are playing? >>>" ).toInt
     val startingMoney : Int = readLine("How much money should each player start with? >>>$" ).toInt
     val controller = Controller(playerCount, startingMoney)
-    val gui = GUI(controller)
+
     val tui = TUI(controller)
+    val gui = GUI(controller)

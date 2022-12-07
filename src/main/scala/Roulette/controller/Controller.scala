@@ -1,10 +1,10 @@
 package Roulette.controller
 
-import Roulette.controller
+import Roulette.{controller, util}
 import Roulette.model.{Bet, Player}
 import Roulette.util.Observable
-import Roulette.controller.State._
-
+import Roulette.controller.State.*
+import Roulette.util.Event
 
 import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn.readLine
@@ -31,6 +31,7 @@ class Controller(playerCount: Int, startingMoney: Int) extends Observable {
     else
       updated_money = players(player_index).getAvailableMoney() - money
     players = players.updated(player_index, Player(updated_money))
+    notifyObservers(player_index, Event.PLAY)
   }
 
   def calculateBets(bets: Vector[Bet]): Vector[String] = {
@@ -57,7 +58,7 @@ class Controller(playerCount: Int, startingMoney: Int) extends Observable {
     val new_money: Int = players(playerIndex).getAvailableMoney() + won_money
     updatePlayer(playerIndex, won_money, true)
     val retvalue = "Player " + (playerIndex + 1) + " won their bet of $" + won_money + ". They now have $" + players(playerIndex).getAvailableMoney() + " available."
-    notifyObservers
+    notifyObservers(playerIndex, Event.PLAY)
     retvalue
   }
 
@@ -66,7 +67,7 @@ class Controller(playerCount: Int, startingMoney: Int) extends Observable {
     //val new_money: Int = players(playerIndex).getAvailableMoney() - lost_money
     //updatePlayer(playerIndex, new_money, false)
     val retval = "Player " + (playerIndex + 1) + " lost their bet of $" + lost_money + ". They now have $" + players(playerIndex).getAvailableMoney() + " available."
-    notifyObservers
+    notifyObservers(playerIndex, Event.PLAY)
     retval
   }
 
