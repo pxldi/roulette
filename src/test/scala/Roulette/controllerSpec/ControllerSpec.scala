@@ -1,6 +1,8 @@
-package Roulette.controller
+package Roulette.controllerSpec
 
-import Roulette.controller.State.{IDLE, State}
+import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.controller.controllerComponent.State.*
+import Roulette.controller.controllerComponent.State
 import Roulette.model.Bet
 
 import scala.io.StdIn.readLine
@@ -18,11 +20,11 @@ import scala.Console.in
 class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEquals {
   var state: State = IDLE
 
-  val playerCount : Int = 1
-  val startingMoney : Int = 100
-  val controller = Controller(playerCount, startingMoney)
+  val playerCount: Int = 1
+  val startingMoney: Int = 100
+  val controller = Controller()
   val vc = VectorBuilder[Bet]
-  val bets = controller.calculateBets(vc.result())
+  val bets = controller.calculateBets()
   controller.setupPlayers()
 
   "A State" should {
@@ -55,13 +57,8 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
       val expected = "Player 1 lost their bet of $20. They now have $240 available."
       win should ===(expected)
     }
-    "have a method to get the amount of Players" in {
-      val count = controller.getPlayerCount()
-      val expected = 1
-      count should ===(expected)
-    }
     "have a method to get the State" in {
-      val state1 = controller.getState()
+      val state1 = controller.getState
       state1 should ===(state)
     }
     "have a method to print the State" in {
@@ -70,26 +67,41 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
     }
     "have a method to decide between the colours" in {
       val bet = new Bet
-      bet.withBetType("c").withRandomNumber(12).withPlayerIndex(0).withBetAmount(20).withColor("r")
+      bet
+        .withBetType("c")
+        .withRandomNumber(12)
+        .withPlayerIndex(0)
+        .withBetAmount(20)
+        .withColor("r")
       val colour = controller.color(bet)
       val expected = "Player 1 won their bet of $40. They now have $520 available."
       colour should ===(expected)
     }
     "have a method to decide between the number" in {
       val bet = new Bet
-      bet.withBetType("n").withRandomNumber(12).withPlayerIndex(0).withBetAmount(20).withBetNumber(12)
+      bet
+        .withBetType("n")
+        .withRandomNumber(12)
+        .withPlayerIndex(0)
+        .withBetAmount(20)
+        .withBetNumber(12)
       val num = controller.num(bet)
       val expected = "Player 1 won their bet of $720. They now have $1760 available."
       num should ===(expected)
     }
     "have a method to decide between even and odd" in {
       val bet = new Bet
-      bet.withBetType("o").withRandomNumber(12).withPlayerIndex(0).withBetAmount(20).withBetNumber(12)
+      bet
+        .withBetType("o")
+        .withRandomNumber(12)
+        .withPlayerIndex(0)
+        .withBetAmount(20)
+        .withBetNumber(12)
       val evenOdd = controller.num(bet)
       val expected = "Player 1 won their bet of $720. They now have $4240 available."
       evenOdd should ===(expected)
     }
-    //TODO Interpreter
+    // TODO Interpreter
 
   }
 }

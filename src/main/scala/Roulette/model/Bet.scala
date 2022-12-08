@@ -1,9 +1,8 @@
 package Roulette.model
 
 // Fluent Interface
-class Bet{
+class Bet {
   var bet_type: String = ""
-  var random_number: Int = 0
   var player_index: Int = 0
   var bet_number: Int = 0
   var bet_odd_or_even: String = ""
@@ -12,11 +11,6 @@ class Bet{
 
   def withBetType(bet_type: String): Bet = {
     this.bet_type = bet_type
-    this
-  }
-
-  def withRandomNumber(random_number: Int): Bet = {
-    this.random_number = random_number
     this
   }
 

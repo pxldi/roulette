@@ -1,6 +1,7 @@
 package Roulette.aview
 
-import Roulette.controller.{Controller, State}
+import Roulette.controller.controllerComponent.State
+import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.util.Event
 import Roulette.model.*
 import Roulette.util.Observer
@@ -10,213 +11,204 @@ import scala.swing.Action.NoAction.title
 import scala.swing.event.*
 import scala.collection.immutable.VectorBuilder
 
-class GUI(controller: Controller) extends Observer { //extends Frame with Observer
-  val vc = VectorBuilder[Bet]
+class GUI(controller: Controller) extends Observer { // extends Frame with Observer
+
+  private val state_label = new Label("Welcome to Roulette!")
+  private val victory_label = new Label("")
+  private val player_one_money = new Label("P1: " + controller.players(0).getAvailableMoney + "$")
+  private val player_two_money = new Label("P2: " + controller.players(1).getAvailableMoney + "$")
+  private val result = new Label("Bet Result")
+  private val bet_amount_textfield = new TextField("0", 4)
+  private val bet_number_textfield = new TextField("0", 4)
+
+  private var selected_player = 0
+  private var bet_type = "n"
+  private var bet_value = "0"
+  private var bet_amount = 0
+
+  bet_number_textfield.editable = false
   controller.add(this)
-  controller.setupPlayers()
 
-  /*def update(idx: Int): Unit = {
-    if (controller.bankmoney <= 0) {
-      result.text_=("^+.+^ GAME OVER ^+.+^")
-      repaint()
-      Thread.sleep(5000)
-      System.exit(0)
-    }
-    statusline.text = (">.> " + controller.gameStatus.toString + " <.<")
-    nameLine.text_=(controller.name)
-    moneyLine.text_=(controller.bankmoney.toString)
-    repaint()
-  } */
-  override def update(index: Int, e: Event): Unit = {
+  private def updateLabels(): Unit =
+    player_one_money.text = "P1: " + controller.players(0).getAvailableMoney + "$"
+    player_two_money.text = "P2: " + controller.players(1).getAvailableMoney + "$"
+
+  private def showPopup(message: String): Unit =
+    val dialog = new Dialog()
+    dialog.contents = new Label(message)
+    dialog.centerOnScreen()
+    dialog.visible = true
+
+  override def update(e: Event): Unit = {
     e match
-      case Event.QUIT => println("Quitting")
-      case Event.PLAY =>
-        statusline.text = ("Player" + (index+1) + " Available Money: " + controller.players(index).getAvailableMoney() + " State: "+ controller.getState().toString)
+      case Event.DRAW => showPopup("The game ended in a draw!"); updateLabels()
+      case Event.P1WIN => showPopup("The game ended. Player 1 won!"); updateLabels()
+      case Event.P2WIN => showPopup("The game ended. Player 2 won!"); updateLabels()
+      case Event.UPDATE => updateLabels()
+      case Event.QUIT => System.exit(0)
   }
-  title = "Roulette"
-
-  val statusline = new Label("Status")
-  val playerCountLine = new TextField("Anzahl Spieler", 10)
-  val startMoneyLine = new TextField("1000", 4)
-  val einsatzLine = new TextField("100", 4)
-  var result = new Label("")
-  var oldMoney = 0
-  var newMoney = 0
 
   new Frame {
 
-    def frame = new MainFrame {
+    private def frame = new MainFrame {
 
+      // Menu Bar
       menuBar = new MenuBar {
         contents += new Menu("File") {
+          contents += new MenuItem(Action("Save") {})
+          contents += new MenuItem(Action("Load") {})
           contents += new MenuItem(Action("Quit") {
-            System.exit(-1)
-          })
-          contents += new MenuItem(Action("Create new Player") {
-            //controller.createNewPlayer(nameLine.text, bet, moneyLine.text.toInt)
-            //controller.set(controller.bankmoney)
-            //update
-          })
-        }
-        contents += new Menu("Options") {
-          contents += new MenuItem(Action("read") {
-            //val js = new FileIO
-            //var player = new Player("Jan", "Red", 100)
-            //player = js.load
-            //controller.createNewPlayer(player.toString, player.playerBet, player.getbankmoney)
-            //update
-          })
-          contents += new MenuItem(Action("save") {
-            //val js = new FileIO
-            //var player = new Player(controller.name, controller.bet, controller.bankmoney)
-            //js.save(player)
+            controller.quit()
           })
         }
       }
 
-
       contents = new BoxPanel(Orientation.Vertical) {
-        contents += new Label("\n")
-        contents += new Label("\n")
-        contents += new BoxPanel(Orientation.Horizontal) {
-          contents += statusline
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Status")
-          border = Swing.EmptyBorder(10, 10, 10, 10)
-        }
-        contents += new Label("\n")
-        contents += new Label("\n")
 
+        contents += Swing.VStrut(15)
+
+        // Status Text
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += state_label
+        }
+
+        contents += Swing.VStrut(15)
+
+        // Result Text
         contents += new BoxPanel(Orientation.Horizontal) {
           contents += result
         }
-        var actualPlayer = 0
+
+        contents += Swing.VStrut(15)
+
+        // Money Text
         contents += new BoxPanel(Orientation.Horizontal) {
+          contents += player_one_money
+          contents += Swing.HStrut(15)
+          contents += player_two_money
+          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Money")
+        }
 
-          contents += Button("Player1") {
-            statusline.text = ("Player1 available money: $" + controller.players(0).getAvailableMoney())
-            actualPlayer = 0
+        contents += Swing.VStrut(15)
+
+        // Player Selection
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += Button("Player 1") {
+            selected_player = 0
           }
 
-          contents += Button("Player2") {
-            statusline.text = ("Player2 available money: $" + controller.players(1).getAvailableMoney())
-            actualPlayer = 1
-          }
-          contents += Button("Player3") {
-            statusline.text = ("Player3 available money: $" + controller.players(2).getAvailableMoney())
-            actualPlayer = 2
+          contents += Swing.HStrut(10)
+
+          contents += Button("Player 2") {
+            selected_player = 1
           }
 
-          contents += Button("Player4") {
-            statusline.text = ("Player4 available money: $" + controller.players(3).getAvailableMoney())
-            actualPlayer = 3
-          }
-          contents += Button("Player5") {
-            statusline.text = ("Player5 available money: $" + controller.players(4).getAvailableMoney())
-            actualPlayer = 4
-          }
           border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Choose Player")
         }
-        var actualBet = 0
-        val bet = new Bet
+
+        contents += Swing.VStrut(15)
+
+        // Bet Amount
         contents += new BoxPanel(Orientation.Horizontal) {
-          contents += new Label("\n")
-          contents += einsatzLine
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Bet")
+          contents += bet_amount_textfield
+          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Bet Amount")
         }
+
+        contents += Swing.VStrut(15)
+
+        // Bet Options
         contents += new BoxPanel(Orientation.Horizontal) {
-          contents += Button("Safe Bet Money") {
-            actualBet = einsatzLine.text.toInt
-            statusline.text = ("Bet: " + einsatzLine.text)
+          contents += Button("Number") {
+            bet_type = "n"
+            bet_number_textfield.editable = true
           }
-        }
-        contents += new Label("\n")
-
-        contents += new BoxPanel(Orientation.Horizontal) {
-          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Bet options")
-
+          contents += Swing.HStrut(2)
           contents += Button("Even") {
-            val randomNumber = controller.generateRandomNumber()
-            controller.changeState(State.BET)
-            vc.clear()
-
-            bet.withBetType("o").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withOddOrEven("e")
-            vc.addOne(bet)
-            controller.changeState(State.RESULT)
-            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
-            update(actualPlayer, Event.PLAY)
-
-            val bets = controller.calculateBets(vc.result())
-            for (s <- bets) {
-              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
-            }
+            bet_type = "e"
+            bet_value = "e"
+            bet_number_textfield.editable = false
           }
-
+          contents += Swing.HStrut(2)
           contents += Button("Odd") {
-            val randomNumber = controller.generateRandomNumber()
-            controller.changeState(State.BET)
-            vc.clear()
-
-            bet.withBetType("o").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withOddOrEven("o")
-            vc.addOne(bet)
-            controller.changeState(State.RESULT)
-            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
-            update(actualPlayer, Event.PLAY)
-
-            val bets = controller.calculateBets(vc.result())
-            for (s <- bets) {
-              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
-            }
+            bet_type = "e"
+            bet_value = "o"
+            bet_number_textfield.editable = false
           }
+          contents += Swing.HStrut(2)
           contents += Button("Black") {
-            val randomNumber = controller.generateRandomNumber()
-            controller.changeState(State.BET)
-            vc.clear()
-
-            bet.withBetType("c").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withColor("b")
-            vc.addOne(bet)
-            controller.changeState(State.RESULT)
-            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
-            update(actualPlayer, Event.PLAY)
-
-            val bets = controller.calculateBets(vc.result())
-            for (s <- bets) {
-              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
-            }
+            bet_type = "c"
+            bet_value = "b"
+            bet_number_textfield.editable = false
           }
+          contents += Swing.HStrut(2)
           contents += Button("Red") {
-            val randomNumber = controller.generateRandomNumber()
-            controller.changeState(State.BET)
-            vc.clear()
-
-            bet.withBetType("c").withRandomNumber(randomNumber).withPlayerIndex(actualPlayer).withBetAmount(actualBet).withColor("r")
-            vc.addOne(bet)
-            controller.changeState(State.RESULT)
-            controller.updatePlayer(actualPlayer, bet.bet_amount, false)
-            update(actualPlayer, Event.PLAY)
-
-            val bets = controller.calculateBets(vc.result())
-            for (s <- bets) {
-              statusline.text = ("The roulette number is: " + randomNumber + " " + s)
-            }
+            bet_type = "c"
+            bet_value = "r"
+            bet_number_textfield.editable = false
           }
         }
 
-        contents += new Label("\n")
+        contents += Swing.VStrut(15)
 
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += bet_number_textfield
+          border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Bet Number")
+        }
+
+        // Place Bet Button
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += Button("Place Bet") {
+            createBet()
+          }
+          contents += Swing.HStrut(5)
+          contents += Button("End Betting Phase") {
+            result.text = controller.calculateBets().mkString("/n")
+          }
+        }
+
+        contents += Swing.VStrut(15)
+
+        // Undo Redo
         contents += new BoxPanel(Orientation.Horizontal) {
           contents += Button("Undo") {
-            //controller.undo
+            controller.undo()
           }
+          contents += Swing.HStrut(5)
           contents += Button("Redo") {
-            //controller.redo
+            controller.redo()
           }
           border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Lowered), "Undo & Redo")
         }
         border = Swing.EmptyBorder(20, 20, 20, 20)
       }
     }
-
+    frame.centerOnScreen()
     frame.visible = true
   }
 
+  private def createBet(): Unit =
+    val bet = new Bet
+    bet_amount = bet_amount_textfield.text.toInt
+    bet_type match
+      case "n" =>
+        bet
+          .withPlayerIndex(selected_player)
+          .withBetType(bet_type)
+          .withBetNumber(bet_number_textfield.text.toInt)
+          .withBetAmount(bet_amount)
+      case "e" =>
+        bet
+          .withPlayerIndex(selected_player)
+          .withBetType(bet_type)
+          .withOddOrEven(bet_value)
+          .withBetAmount(bet_amount)
+      case "c" =>
+        bet
+          .withPlayerIndex(selected_player)
+          .withBetType(bet_type)
+          .withColor(bet_value)
+          .withBetAmount(bet_amount)
+      case _ =>
+        println("XD")
+    controller.addBet(bet)
 }
