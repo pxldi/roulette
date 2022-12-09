@@ -6,6 +6,7 @@ import Roulette.util.Event
 import Roulette.model.*
 import Roulette.util.Observer
 
+import java.awt.{Dimension, Rectangle}
 import scala.swing.*
 import scala.swing.Action.NoAction.title
 import scala.swing.event.*
@@ -14,7 +15,6 @@ import scala.collection.immutable.VectorBuilder
 class GUI(controller: Controller) extends Observer { // extends Frame with Observer
 
   private val state_label = new Label("Welcome to Roulette!")
-  private val victory_label = new Label("")
   private val player_one_money = new Label("P1: " + controller.players(0).getAvailableMoney + "$")
   private val player_two_money = new Label("P2: " + controller.players(1).getAvailableMoney + "$")
   private val result = new Label("Bet Result")
@@ -36,6 +36,7 @@ class GUI(controller: Controller) extends Observer { // extends Frame with Obser
   private def showPopup(message: String): Unit =
     val dialog = new Dialog()
     dialog.contents = new Label(message)
+    dialog.bounds = Rectangle(200, 100)
     dialog.centerOnScreen()
     dialog.visible = true
 

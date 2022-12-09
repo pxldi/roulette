@@ -47,12 +47,15 @@ class Controller() extends ControllerInterface with Observable {
     if (player_one_money == 0 && player_two_money == 0)
       notifyObservers(Event.DRAW)
       setupPlayers()
+      notifyObservers(Event.UPDATE)
     else if (player_one_money == 0)
-      notifyObservers(Event.P1WIN)
-      setupPlayers()
-    else if (player_two_money == 0)
       notifyObservers(Event.P2WIN)
       setupPlayers()
+      notifyObservers(Event.UPDATE)
+    else if (player_two_money == 0)
+      notifyObservers(Event.P1WIN)
+      setupPlayers()
+      notifyObservers(Event.UPDATE)
 
   def undo(): Unit =
     undoManager.undoStep()
