@@ -29,6 +29,9 @@ class Controller() extends ControllerInterface with Observable {
 
   def updatePlayer(player_index: Int, money: Int): Unit =
     players = players.updated(player_index, Player(money))
+    
+  def getPlayers(): Vector[Player] =
+    players
 
   def changeMoney(player_index: Int, money: Int, add: Boolean): Unit = {
     var updated_money: Int = 0

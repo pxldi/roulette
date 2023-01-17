@@ -1,17 +1,18 @@
 package Roulette.aview.tuiComponent.tuiBaseImpl
 
-import Roulette.controller.controllerComponent.State
+import Roulette.controller.controllerComponent.{ControllerInterface, State}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.model.{Bet, Player}
 import Roulette.util.{Event, Observer}
-import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
+import Roulette.aview.tuiComponent.TUIInterface
 
+import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn.readLine
 import scala.util.{Failure, Success, Try}
 
-class TUI(controller: Controller) extends Observer:
+class TUI()(using controller: ControllerInterface) extends Observer:
   controller.add(this)
   private var exit = false
   override def update(e: Event): Unit =
@@ -94,8 +95,8 @@ class TUI(controller: Controller) extends Observer:
     Try(p.toInt - 1, v.toInt, a.toInt)
 
   private def printTUIState(): Unit =
-    println("Player 1 : " + "Available money: $" + controller.players(0).getAvailableMoney)
-    println("Player 2 : " + "Available money: $" + controller.players(1).getAvailableMoney)
+    println("Player 1 : " + "Available money: $" + controller.getPlayers()(0).getAvailableMoney)
+    println("Player 2 : " + "Available money: $" + controller.getPlayers()(1).getAvailableMoney)
     println("Game State: " + controller.getState)
   private def printGameTitle(): Unit =
     println("""

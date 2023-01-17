@@ -1,22 +1,21 @@
-package Roulette.aview
+package Roulette.aview.guiComponent.guiBaseImpl
 
-import Roulette.controller.controllerComponent.State
+import Roulette.controller.controllerComponent.{State, ControllerInterface}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.util.Event
 import Roulette.model.*
-import Roulette.util.Observer
+import Roulette.util.{Event, Observer}
 
 import java.awt.{Dimension, Rectangle}
+import scala.collection.immutable.VectorBuilder
 import scala.swing.*
 import scala.swing.Action.NoAction.title
 import scala.swing.event.*
-import scala.collection.immutable.VectorBuilder
 
-class GUI(controller: Controller) extends Observer { // extends Frame with Observer
+class GUI()(using controller: ControllerInterface) extends Observer { // extends Frame with Observer
 
   private val state_label = new Label("Welcome to Roulette!")
-  private val player_one_money = new Label("P1: " + controller.players(0).getAvailableMoney + "$")
-  private val player_two_money = new Label("P2: " + controller.players(1).getAvailableMoney + "$")
+  private val player_one_money = new Label("P1: " + controller.getPlayers()(0).getAvailableMoney + "$")
+  private val player_two_money = new Label("P2: " + controller.getPlayers()(1).getAvailableMoney + "$")
   private val result = new Label("Bet Result")
   private val bet_amount_textfield = new TextField("0", 4)
   private val bet_number_textfield = new TextField("0", 4)
@@ -30,8 +29,8 @@ class GUI(controller: Controller) extends Observer { // extends Frame with Obser
   controller.add(this)
 
   private def updateLabels(): Unit =
-    player_one_money.text = "P1: " + controller.players(0).getAvailableMoney + "$"
-    player_two_money.text = "P2: " + controller.players(1).getAvailableMoney + "$"
+    player_one_money.text = "P1: " + controller.getPlayers()(0).getAvailableMoney + "$"
+    player_two_money.text = "P2: " + controller.getPlayers()(1).getAvailableMoney + "$"
 
   private def showPopup(message: String): Unit =
     val dialog = new Dialog()
