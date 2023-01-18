@@ -3,6 +3,7 @@ package Roulette.controller.controllerComponent.controllerBaseImpl
 import Roulette.controller.PutCommand
 import Roulette.controller.controllerComponent.State.*
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
+import Roulette.model.fileIOComponent.FileIOInterface
 import Roulette.model.{Bet, Player, PlayerUpdate}
 import Roulette.util.{Event, Observable, UndoManager}
 import Roulette.{controller, util}
@@ -11,7 +12,7 @@ import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn.readLine
 import scala.util.Random
 
-class Controller() extends ControllerInterface with Observable {
+class Controller(using val fIO: FileIOInterface) extends ControllerInterface with Observable {
 
   private var state: State = IDLE
   private val undoManager: UndoManager = new UndoManager
@@ -66,6 +67,15 @@ class Controller() extends ControllerInterface with Observable {
 
   def redo(): Unit =
     undoManager.redoStep()
+    notifyObservers(Event.UPDATE)
+
+  def save(): Unit =
+    fIO.save(players, bets)
+  
+  def load(): Unit =
+    val (vector_players, vector_bets) = fIO.load()
+    players = vector_players
+    bets = vector_bets
     notifyObservers(Event.UPDATE)
 
   def quit(): Unit =

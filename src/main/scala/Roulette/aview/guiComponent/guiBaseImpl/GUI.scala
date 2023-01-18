@@ -14,8 +14,10 @@ import scala.swing.event.*
 class GUI()(using controller: ControllerInterface) extends Observer { // extends Frame with Observer
 
   private val state_label = new Label("Welcome to Roulette!")
-  private val player_one_money = new Label("P1: " + controller.getPlayers()(0).getAvailableMoney + "$")
-  private val player_two_money = new Label("P2: " + controller.getPlayers()(1).getAvailableMoney + "$")
+  private val player_one_money = new Label(
+    "P1: " + controller.getPlayers()(0).getAvailableMoney + "$")
+  private val player_two_money = new Label(
+    "P2: " + controller.getPlayers()(1).getAvailableMoney + "$")
   private val result = new Label("Bet Result")
   private val bet_amount_textfield = new TextField("0", 4)
   private val bet_number_textfield = new TextField("0", 4)
@@ -55,8 +57,12 @@ class GUI()(using controller: ControllerInterface) extends Observer { // extends
       // Menu Bar
       menuBar = new MenuBar {
         contents += new Menu("File") {
-          contents += new MenuItem(Action("Save") {})
-          contents += new MenuItem(Action("Load") {})
+          contents += new MenuItem(Action("Save") {
+            controller.save()
+          })
+          contents += new MenuItem(Action("Load") {
+            controller.load()
+          })
           contents += new MenuItem(Action("Quit") {
             controller.quit()
           })

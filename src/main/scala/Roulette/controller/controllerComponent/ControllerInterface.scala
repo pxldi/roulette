@@ -11,6 +11,8 @@ trait ControllerInterface extends Observable:
   def checkGameEnd(): Unit
   def undo(): Unit
   def redo(): Unit
+  def save(): Unit
+  def load(): Unit
   def quit(): Unit
   def addBet(bet: Bet): Boolean
   def calculateBets(): Vector[String]

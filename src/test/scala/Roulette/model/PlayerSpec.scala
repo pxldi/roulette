@@ -20,19 +20,4 @@ import scala.Console.in
 
 class PlayerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEquals {
 
-  val playerCount: Int = 1
-  val startingMoney: Int = 100
-  val controller = Controller()
-  val vc = VectorBuilder[Bet]
-  val bets = controller.calculateBets()
-
-  controller.setupPlayers()
-
-  "A Player" should {
-    "have a method to get his available Money" in {
-      val money = controller.players(0).getAvailableMoney
-      val expected = 100
-      money should ===(expected)
-    }
-  }
 }

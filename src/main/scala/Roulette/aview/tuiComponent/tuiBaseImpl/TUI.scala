@@ -4,7 +4,6 @@ import Roulette.controller.controllerComponent.{ControllerInterface, State}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.model.{Bet, Player}
 import Roulette.util.{Event, Observer}
-import Roulette.aview.tuiComponent.TUIInterface
 
 import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 import scala.annotation.tailrec
@@ -47,6 +46,8 @@ class TUI()(using controller: ControllerInterface) extends Observer:
       case "d" => print(controller.calculateBets()); None
       case "u" => controller.undo(); None
       case "r" => controller.redo(); None
+      case "s" => controller.save(); None
+      case "l" => controller.load(); None
       case "q" => controller.quit(); None
       case null => None
       case _ =>
