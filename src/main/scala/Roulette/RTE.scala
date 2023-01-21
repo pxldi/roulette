@@ -1,20 +1,28 @@
 package Roulette
 
+import Roulette.aview.guiComponent.guiBaseImpl.GUI
+import Roulette.aview.tuiComponent.tuiBaseImpl.TUI
+import Roulette.controller.controllerComponent.ControllerInterface
+import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.model.fileIOComponent.FileIOInterface
+import Roulette.model.fileIOComponent.xmlImpl.FileIO
+//import Roulette.model.fileIOComponent.jsonImpl.FileIO
 
-import Roulette.aview.GUI
-import Roulette.aview.TUI
-import Roulette.model.Player
-import Roulette.controller.Controller
+@main
+def main(): Unit =
 
-import javax.swing.plaf.TextUI
-import scala.io.StdIn.readLine
-import scala.util.Random
+  val fIO = new FileIO
+  given FileIOInterface = fIO
+  val controller = new Controller
+  given ControllerInterface = controller
+  controller.generateRandomNumber()
+  controller.setupPlayers()
+  val tui = TUI()
+  val gui = GUI()
 
-@main def main(): Unit =
-    println("Welcome to Roulette! \n")
-    val playerCount : Int = readLine("How many players are playing? >>>" ).toInt
-    val startingMoney : Int = readLine("How much money should each player start with? >>>$" ).toInt
-    val controller = Controller(playerCount, startingMoney)
-
-    val tui = TUI(controller)
-    val gui = GUI(controller)
+  val cliThread = new Thread(() =>
+    tui.start()
+    System.exit(0)
+  )
+  cliThread.setDaemon(true)
+  cliThread.start()

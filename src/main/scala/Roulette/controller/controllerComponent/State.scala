@@ -1,4 +1,4 @@
-package Roulette.controller
+package Roulette.controller.controllerComponent
 
 object State extends Enumeration {
     type State = Value
