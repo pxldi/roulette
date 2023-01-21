@@ -5,7 +5,6 @@ import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.model.{Bet, Player}
 import Roulette.util.{Event, Observer}
 
-import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn.readLine
