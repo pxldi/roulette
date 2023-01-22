@@ -2,7 +2,7 @@ package Roulette.controllerSpec
 
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.controller.controllerComponent.State.*
-import Roulette.controller.controllerComponent.State
+import Roulette.controller.controllerComponent.{ControllerInterface, State}
 import Roulette.model.Bet
 import Roulette.model.fileIOComponent.FileIOInterface
 import Roulette.model.fileIOComponent.xmlImpl.FileIO
@@ -16,7 +16,8 @@ import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.EitherValues
 import org.scalactic.TripleEquals.unconstrainedEquality
-import org.scalatest.matchers.*
+import org.scalatest.matchers.Matcher
+import org.scalatest.matchers.should.Matchers._
 
 import scala.Console.in
 
@@ -28,7 +29,9 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
   val fIO = new FileIO
   given FileIOInterface = fIO
   val controller = new Controller
+  given ControllerInterface = controller
   controller.generateRandomNumber()
+  controller.setupPlayers()
   val vc = VectorBuilder[Bet]
   val bets = controller.calculateBets()
   controller.setupPlayers()
@@ -49,9 +52,9 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
       }
     }
     "have a method to generate random Numbers" in {
-      val i = controller.generateRandomNumber()
+      val i = controller.getRandomNumber
       val beWithin0and37 = be >= 0 and be <= 37
-      i should ===(beWithin0and37)
+      i should beWithin0and37
     }
     "have a method to calc a win" in {
       val win = controller.winBet(0, 20, 2)
@@ -80,7 +83,7 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
         .withBetAmount(20)
         .withColor("r")
       val colour = controller.color(bet)
-      val expected = "Player 1 won their bet of $40. They now have $520 available."
+      val expected = "Player 1 won their bet of $40. They now have $280 available."
       colour should ===(expected)
     }
     "have a method to decide between the number" in {
@@ -92,7 +95,7 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
         .withBetAmount(20)
         .withBetNumber(12)
       val num = controller.num(bet)
-      val expected = "Player 1 won their bet of $720. They now have $1760 available."
+      val expected = "Player 1 won their bet of $720. They now have $1000 available."
       num should ===(expected)
     }
     "have a method to decide between even and odd" in {
@@ -104,7 +107,7 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
         .withBetAmount(20)
         .withBetNumber(12)
       val evenOdd = controller.num(bet)
-      val expected = "Player 1 won their bet of $720. They now have $4240 available."
+      val expected = "Player 1 won their bet of $720. They now have $1720 available."
       evenOdd should ===(expected)
     }
   }

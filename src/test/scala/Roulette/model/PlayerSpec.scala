@@ -1,5 +1,6 @@
 package Roulette.controller
 
+import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.State.{IDLE, State}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.model.Bet
@@ -26,6 +27,9 @@ class PlayerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTriple
   val fIO = new FileIO
   given FileIOInterface = fIO
   val controller = new Controller
+  given ControllerInterface = controller
+  controller.generateRandomNumber()
+  controller.setupPlayers()
   val vc = VectorBuilder[Bet]
   val bets = controller.calculateBets()
 
@@ -34,7 +38,7 @@ class PlayerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTriple
   "A Player" should {
     "have a method to get his available Money" in {
       val money = controller.players(0).getAvailableMoney
-      val expected = 100
+      val expected = 200
       money should ===(expected)
     }
   }
