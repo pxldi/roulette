@@ -65,6 +65,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
                   .withBetType(t)
                   .withBetNumber(value._2)
                   .withBetAmount(value._3)
+                  .withRandomNumber(controller.randomNumber)
                 Some(bet)
               case Failure(_) => println("Please correct your input!"); None
           case "e" =>
@@ -75,6 +76,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
                   .withBetType(t)
                   .withOddOrEven(v)
                   .withBetAmount(value._2)
+                  .withRandomNumber(controller.randomNumber)
                 Some(bet)
               case Failure(_) => println("Please correct your input!"); None
           case "c" =>
@@ -85,6 +87,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
                   .withBetType(t)
                   .withColor(v)
                   .withBetAmount(value._2)
+                  .withRandomNumber(controller.randomNumber)
                 Some(bet)
               case Failure(_) => println("Please correct your input!"); None
       case _ => None
