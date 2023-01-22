@@ -97,11 +97,11 @@ class TUI()(using controller: ControllerInterface) extends Observer:
   private def convertToInt(p: String, v: String, a: String): Try[(Int, Int, Int)] =
     Try(p.toInt - 1, v.toInt, a.toInt)
 
-  private def printTUIState(): Unit =
+  def printTUIState(): Unit =
     print("Player 1 : " + "Available money: $" + controller.getPlayers()(0).getAvailableMoney + "\n")
     print("Player 2 : " + "Available money: $" + controller.getPlayers()(1).getAvailableMoney + "\n")
     //println("Game State: " + controller.getState)
-  private def printGameTitle(): Unit =
+  def printGameTitle(): Unit =
     println("""
             | _____             _      _   _
             ||  __ \           | |    | | | |
@@ -111,7 +111,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
             ||_|  \_\___/ \__,_|_|\___|\__|\__\___|
             |""".stripMargin)
 
-  private def printInstructions(): Unit =
+  def printInstructions(): Unit =
     println("""
             |Instructions: Type...
             |>>> "[Player number (1 or 2)] [Bet type (n / e / c)] [Bet value (0 - 36 / e or o / r or b)] [bet amount]" to bet.
