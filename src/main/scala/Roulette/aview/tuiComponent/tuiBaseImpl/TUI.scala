@@ -33,7 +33,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
       analyzeInput(readLine(">>>"))
       loop()
 
-  private def analyzeInput(input: String): Unit =
+  def analyzeInput(input: String): Unit =
     processInput(input) match
       case Some(bet) =>
         if (controller.addBet(bet))
@@ -95,9 +95,9 @@ class TUI()(using controller: ControllerInterface) extends Observer:
     Try(p.toInt - 1, v.toInt, a.toInt)
 
   private def printTUIState(): Unit =
-    println("Player 1 : " + "Available money: $" + controller.getPlayers()(0).getAvailableMoney)
-    println("Player 2 : " + "Available money: $" + controller.getPlayers()(1).getAvailableMoney)
-    println("Game State: " + controller.getState)
+    print("Player 1 : " + "Available money: $" + controller.getPlayers()(0).getAvailableMoney + "\n")
+    print("Player 2 : " + "Available money: $" + controller.getPlayers()(1).getAvailableMoney + "\n")
+    //println("Game State: " + controller.getState)
   private def printGameTitle(): Unit =
     println("""
             | _____             _      _   _
