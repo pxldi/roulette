@@ -8,6 +8,7 @@ class Bet {
   var bet_odd_or_even: String = " "
   var bet_color: String = " "
   var bet_amount: Int = 0
+  var random_number: Int = 0
 
   def withBetType(bet_type: String): Bet = {
     this.bet_type = bet_type
@@ -21,6 +22,11 @@ class Bet {
 
   def withBetNumber(bet_number: Int): Bet = {
     this.bet_number = bet_number
+    this
+  }
+
+  def withRandomNumber(random_number: Int): Bet = {
+    this.random_number = random_number
     this
   }
 

@@ -28,8 +28,6 @@ class TUISpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEqu
 
   "TUI" should {
 
-    ""
-
     "analyze Input and place Bet" in {
       val expected = "Player 1 : Available money: $0\nPlayer 2 : Available money: $200\nYour bet was placed!\r\n"
       val stream = new java.io.ByteArrayOutputStream()
