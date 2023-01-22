@@ -4,6 +4,7 @@ import Roulette.model.{Bet, Player}
 import Roulette.controller.controllerComponent.State.*
 import Roulette.util.Observable
 trait ControllerInterface extends Observable:
+  var randomNumber: Int
   def setupPlayers(): Unit
   def updatePlayer(player_index: Int, money: Int): Unit
   def getPlayers(): Vector[Player]

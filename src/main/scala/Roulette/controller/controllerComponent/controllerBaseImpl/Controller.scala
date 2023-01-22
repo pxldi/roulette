@@ -164,7 +164,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     var retval = ""
 
     def interpret(): String = {
-      if (randomNumber == bet.bet_number)
+      if (bet.random_number == bet.bet_number)
         retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 36))
       else
         retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
@@ -178,12 +178,12 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     def interpret(): String = {
       bet.bet_odd_or_even match
         case "o" =>
-          if (randomNumber % 2 != 0)
+          if (bet.random_number % 2 != 0)
             retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
           else
             retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
         case "e" =>
-          if (randomNumber % 2 == 0)
+          if (bet.random_number % 2 == 0)
             retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
           else
             retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
@@ -201,13 +201,13 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     def interpret(): String = {
       bet.bet_color match
         case "r" =>
-          if (redNumbers.contains(randomNumber))
+          if (redNumbers.contains(bet.random_number))
             retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
           else
             retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
 
         case "b" =>
-          if (blackNumbers.contains(randomNumber))
+          if (blackNumbers.contains(bet.random_number))
             retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
           else
             retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
