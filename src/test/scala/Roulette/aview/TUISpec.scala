@@ -29,7 +29,7 @@ class TUISpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEqu
   "TUI" should {
 
     "analyze Input and place Bet" in {
-      val expected = "Player 1 : Available money: $0\nPlayer 2 : Available money: $200\nYour bet was placed!\r\n"
+      val expected = "Player 1 : Available money: $0\nPlayer 2 : Available money: $200\nYour bet was placed!\n"
       val stream = new java.io.ByteArrayOutputStream()
       Console.withOut(stream) {
         tui.analyzeInput("1 n 0 200")
@@ -57,7 +57,7 @@ class TUISpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEqu
           ||  _  // _ \| | | | |/ _ \ __| __/ _ \
           || | \ \ (_) | |_| | |  __/ |_| ||  __/
           ||_|  \_\___/ \__,_|_|\___|\__|\__\___|
-          |""".stripMargin + "\r\n"
+          |""".stripMargin + "\n"
       val stream = new java.io.ByteArrayOutputStream()
       Console.withOut(stream) {
         tui.printGameTitle()
@@ -74,7 +74,7 @@ class TUISpec extends AnyWordSpec with should.Matchers with TypeCheckedTripleEqu
           |>>> (u) or (r) to undo or redo respectively.
           |>>> (d) to stop the betting phase and spin the wheel.
           |>>> (q) to quit the game.
-          |""".stripMargin + "\r\n"
+          |""".stripMargin + "\n"
       val stream = new java.io.ByteArrayOutputStream()
       Console.withOut(stream) {
         tui.printInstructions()
