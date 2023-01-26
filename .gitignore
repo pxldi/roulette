@@ -33,5 +33,4 @@ metals.sbt
 .idea_modules
 /.worksheet/
 
-*.github
 /saves
