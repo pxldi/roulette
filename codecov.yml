@@ -1,0 +1,4 @@
+ignore:
+  - "**/aview/guiComponent/guiBaseImpl/GUI.scala"
+  - "**/aview/tuiComponent/tuiBaseImpl/TUI.scala"
+  - "**/RTE.scala"
