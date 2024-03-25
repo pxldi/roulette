@@ -56,15 +56,17 @@ class ControllerSpec extends AnyWordSpec with should.Matchers with TypeCheckedTr
       val beWithin0and37 = be >= 0 and be <= 37
       i should beWithin0and37
     }
-    "have a method to calc a win" in {
-      val win = controller.winBet(0, 20, 2)
-      val expected = "Player 1 won their bet of $40. They now have $240 available."
+    "have a method to calculate a win" in {
+      val randomN = 12 // Beispielhafte zufällige Zahl
+      val win = controller.winBet(0, 20, 2, randomN)
+      val expected = s"Player 1 won their bet of $$40 on number $randomN. They now have $$240 available."
       win should ===(expected)
     }
-    "have a method to calc a loose" in {
-      val win = controller.loseBet(0, 20)
-      val expected = "Player 1 lost their bet of $20. They now have $240 available."
-      win should ===(expected)
+    "have a method to calculate a loss" in {
+      val randomN = 12 // Beispielhafte zufällige Zahl
+      val lose = controller.loseBet(0, 20, randomN)
+      val expected = s"Player 1 lost their bet of $$20 on number $randomN. They now have $$220 available." // Angenommen, der Startbetrag war 240
+      lose should ===(expected)
     }
     "have a method to get the State" in {
       val state1 = controller.getState

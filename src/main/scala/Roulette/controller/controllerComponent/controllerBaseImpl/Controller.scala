@@ -30,7 +30,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def updatePlayer(player_index: Int, money: Int): Unit =
     players = players.updated(player_index, Player(money))
-    
+
   def getPlayers(): Vector[Player] =
     players
 
@@ -71,7 +71,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def save(): Unit =
     fIO.save(players, bets)
-  
+
   def load(): Unit =
     val (vector_players, vector_bets) = fIO.load()
     players = vector_players
@@ -80,17 +80,27 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def quit(): Unit =
     notifyObservers(Event.QUIT)
+  
+  def addBet(bet: Bet): Boolean = {
+    bet.bet_amount match {
+      case Some(betAmount) if betAmount > players(bet.player_index.getOrElse(0)).getAvailableMoney =>
+        println("Not enough money available to bet that amount!")
+        false
+      case Some(betAmount) =>
+        // Zufallszahl setzen, bevor die Wette hinzugefügt wird
+        val updatedBet = bet.copy(random_number = Some(randomNumber))
+        bets = bets :+ updatedBet
+        changeMoney(bet.player_index.getOrElse(0), betAmount, false)
+        true
+      case None =>
+        println("Bet amount not provided")
+        false
+    }
+  }
 
-  def addBet(bet: Bet): Boolean =
-    if (bet.bet_amount > players(bet.player_index).getAvailableMoney)
-      println("Not enough money available to bet that amount!")
-      false
-    else
-      bets = bets :+ bet
-      changeMoney(bet.player_index, bet.bet_amount, false)
-      true
 
-  def calculateBets(): Vector[String] =
+
+  /*def calculateBets(): Vector[String] =
     val vc = VectorBuilder[String]
     for (bet <- bets) {
       bet.bet_type match
@@ -106,7 +116,27 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     generateRandomNumber()
     bets = Vector[Bet]()
     checkGameEnd()
+    vc.result()*/
+  def calculateBets(): Vector[String] = {
+    val vc = VectorBuilder[String]()
+    for (bet <- bets) {
+      println(s"Debug: bet_type = ${bet.bet_type}") // Debugg
+      bet.bet_type match {
+        case Some("n") =>
+          vc.addOne(num(bet))
+        case Some("e") =>
+          vc.addOne(evenOdd(bet))
+        case Some("c") =>
+          vc.addOne(color(bet))
+        case _ =>
+          println("Error: Unknown bet type " + bet.bet_type.getOrElse("unknown"))
+      }
+    }
+    generateRandomNumber()
+    bets = Vector[Bet]()
+    checkGameEnd()
     vc.result()
+  }
 
   def generateRandomNumber(): Unit =
     randomNumber = r.nextInt(37)
@@ -114,22 +144,23 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
   def getRandomNumber: Int =
     randomNumber
 
-  def winBet(playerIndex: Int, bet: Int, winRate: Int): String = {
+  def winBet(playerIndex: Int, bet: Int, winRate: Int, rouletteNumber: Int): String = {
     val won_money: Int = bet * winRate
     changeMoney(playerIndex, won_money, true)
     val retvalue =
-      "Player " + (playerIndex + 1) + " won their bet of $" + won_money + ". They now have $" + players(
+      "Player " + (playerIndex + 1) + " won $" + won_money + " on number " + rouletteNumber +" They now have $" + players(
         playerIndex).getAvailableMoney + " available."
     retvalue
   }
 
-  def loseBet(playerIndex: Int, bet: Int): String = {
+  def loseBet(playerIndex: Int, bet: Int, rouletteNumber: Int): String = {
     val lost_money: Int = bet
     val retval =
-      "Player " + (playerIndex + 1) + " lost their bet of $" + lost_money + ". They now have $" + players(
+      "Player " + (playerIndex + 1) + " lost $" + lost_money + " on number " + rouletteNumber +" They now have $" + players(
         playerIndex).getAvailableMoney + " available."
     retval
   }
+
 
   def changeState(state: State): Unit = {
     this.state = state
@@ -160,58 +191,60 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     def interpret(): String
   }
 
+  // für zahlen wetten
   class NumExpression(bet: Bet) extends Expression {
-    var retval = ""
-
     def interpret(): String = {
-      if (bet.random_number == bet.bet_number)
-        retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 36))
-      else
-        retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
-      retval
+      (bet.random_number, bet.bet_number, bet.player_index, bet.bet_amount) match {
+        case (Some(randNum), Some(betNum), Some(playerIdx), Some(betAmount)) if randNum == betNum =>
+          winBet(playerIdx, betAmount, 36, randNum)
+        case (Some(_), Some(_), Some(playerIdx), Some(betAmount)) =>
+          loseBet(playerIdx, betAmount, randomNumber)
+        case _ =>
+          "Invalid bet configuration"
+      }
     }
   }
 
+  // für gerade oder ungerade wetten
   class EOExpression(bet: Bet) extends Expression {
-    var retval = ""
-
     def interpret(): String = {
-      bet.bet_odd_or_even match
-        case "o" =>
-          if (bet.random_number % 2 != 0)
-            retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
-          else
-            retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
-        case "e" =>
-          if (bet.random_number % 2 == 0)
-            retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
-          else
-            retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
-      retval
+      println(s"Debug: bet_odd_or_even = ${bet.bet_odd_or_even}, random_number = ${bet.random_number}, player_index = ${bet.player_index}, bet_amount = ${bet.bet_amount}")
+      (bet.bet_odd_or_even, bet.random_number, bet.player_index, bet.bet_amount) match {
+        case (Some("o"), Some(randNum), Some(playerIdx), Some(betAmount)) if randNum % 2 != 0 =>
+          println(s"Win condition met for odd: randNum = $randNum")
+          println("random Number was: " + randomNumber)
+          winBet(playerIdx, betAmount, 2, randNum)
+        case (Some("e"), Some(randNum), Some(playerIdx), Some(betAmount)) if randNum % 2 == 0 =>
+          println(s"Win condition met for even: randNum = $randNum")
+          println("random Number was: " + randomNumber)
+          winBet(playerIdx, betAmount, 2, randNum)
+        case (Some(_), Some(_), Some(playerIdx), Some(betAmount)) =>
+          println(s"Lose condition met: randNum = ${bet.random_number.getOrElse("N/A")}")
+          println("random Number was: " + randomNumber)
+          loseBet(playerIdx, betAmount, bet.random_number.getOrElse(0))
+        case _ =>
+          "Invalid bet configuration"
+      }
     }
   }
 
+
+  // für Farbenwetten
   class ColorExpression(bet: Bet) extends Expression {
-    var retval = ""
+    private val redNumbers = Set(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+    private val blackNumbers = Set(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
 
-    private val redNumbers: Array[Int] =
-      Array(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
-    private val blackNumbers: Array[Int] =
-      Array(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
     def interpret(): String = {
-      bet.bet_color match
-        case "r" =>
-          if (redNumbers.contains(bet.random_number))
-            retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
-          else
-            retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
-
-        case "b" =>
-          if (blackNumbers.contains(bet.random_number))
-            retval = retval.concat(winBet(bet.player_index, bet.bet_amount, 2))
-          else
-            retval = retval.concat(loseBet(bet.player_index, bet.bet_amount))
-      retval
+      (bet.bet_color, bet.random_number, bet.player_index, bet.bet_amount) match {
+        case (Some("r"), Some(randNum), Some(playerIdx), Some(betAmount)) if redNumbers.contains(randNum) =>
+          winBet(playerIdx, betAmount, 2, randNum)
+        case (Some("b"), Some(randNum), Some(playerIdx), Some(betAmount)) if blackNumbers.contains(randNum) =>
+          winBet(playerIdx, betAmount, 2, randNum)
+        case (Some(_), Some(_), Some(playerIdx), Some(betAmount)) =>
+          loseBet(playerIdx, betAmount, randomNumber)
+        case _ =>
+          "Invalid bet configuration"
+      }
     }
   }
 }

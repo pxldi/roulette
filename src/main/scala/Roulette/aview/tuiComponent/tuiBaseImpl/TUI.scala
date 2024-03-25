@@ -53,44 +53,43 @@ class TUI()(using controller: ControllerInterface) extends Observer:
         processBet(input)
 
   private def processBet(input: String): Option[Bet] =
-    val bet = new Bet
     input.split(" ").toList match
       case p :: t :: v :: a :: Nil =>
-        t match
-          case "n" =>
-            convertToInt(p, v, a) match
-              case Success(value) =>
-                bet
-                  .withPlayerIndex(value._1)
-                  .withBetType(t)
-                  .withBetNumber(value._2)
-                  .withBetAmount(value._3)
-                  .withRandomNumber(controller.randomNumber)
-                Some(bet)
-              case Failure(_) => println("Please correct your input!"); None
-          case "e" =>
-            convertToInt(p, a) match
-              case Success(value) =>
-                bet
-                  .withPlayerIndex(value._1)
-                  .withBetType(t)
-                  .withOddOrEven(v)
-                  .withBetAmount(value._2)
-                  .withRandomNumber(controller.randomNumber)
-                Some(bet)
-              case Failure(_) => println("Please correct your input!"); None
-          case "c" =>
-            convertToInt(p, a) match
-              case Success(value) =>
-                bet
-                  .withPlayerIndex(value._1)
-                  .withBetType(t)
-                  .withColor(v)
-                  .withBetAmount(value._2)
-                  .withRandomNumber(controller.randomNumber)
-                Some(bet)
-              case Failure(_) => println("Please correct your input!"); None
-      case _ => None
+        try {
+          val playerIndex = p.toInt - 1
+          val betAmount = a.toInt
+          val randomNumber = controller.randomNumber
+          t match
+            case "n" =>
+              val betNumber = v.toInt
+              Some(Bet(
+                player_index = Some(playerIndex),
+                bet_type = Some(t),
+                bet_number = Some(betNumber),
+                bet_amount = Some(betAmount),
+                random_number = Some(randomNumber)
+              ))
+            case "e" | "c" =>
+              Some(Bet(
+                player_index = Some(playerIndex),
+                bet_type = Some(t),
+                bet_odd_or_even = if (t == "e") Some(v) else None,
+                bet_color = if (t == "c") Some(v) else None,
+                bet_amount = Some(betAmount),
+                random_number = Some(randomNumber)
+              ))
+            case _ =>
+              println("Invalid bet type.")
+              None
+        } catch {
+          case _: NumberFormatException =>
+            println("Please correct your input!")
+            None
+        }
+      case _ =>
+        println("Invalid input format.")
+        None
+
 
   private def convertToInt(p: String, a: String): Try[(Int, Int)] =
     Try(p.toInt - 1, a.toInt)

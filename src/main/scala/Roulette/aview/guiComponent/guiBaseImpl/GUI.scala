@@ -188,11 +188,12 @@ class GUI()(using controller: ControllerInterface) extends Observer { // extends
         border = Swing.EmptyBorder(20, 20, 20, 20)
       }
     }
+
     frame.centerOnScreen()
     frame.visible = true
   }
 
-  private def createBet(): Unit =
+  /*private def createBet(): Unit =
     val bet = new Bet
     bet_amount = bet_amount_textfield.text.toInt
     bet_type match
@@ -217,4 +218,45 @@ class GUI()(using controller: ControllerInterface) extends Observer { // extends
       case _ =>
         println("XD")
     controller.addBet(bet)
+}*/
+
+  private def createBet(): Unit = {
+    // Betrag aus dem Textfeld auslesen und als Option speichern, falls es sich in einen Int umwandeln lässt
+    val betAmountOption = try Some(bet_amount_textfield.text.toInt) catch {
+      case _: NumberFormatException => None
+    }
+
+    // Basierend auf dem Bettyp die Bet-Instanz mit den entsprechenden Werten erstellen
+    val bet = bet_type match {
+      case "n" =>
+        Bet(
+          bet_type = Some("n"),
+          player_index = Some(selected_player),
+          bet_number = try Some(bet_number_textfield.text.toInt) catch {
+            case _: NumberFormatException => None
+          },
+          bet_amount = betAmountOption
+        )
+      case "e" =>
+        Bet(
+          bet_type = Some("e"),
+          player_index = Some(selected_player),
+          bet_odd_or_even = Some(bet_value),
+          bet_amount = betAmountOption
+        )
+      case "c" =>
+        Bet(
+          bet_type = Some("c"),
+          player_index = Some(selected_player),
+          bet_color = Some(bet_value),
+          bet_amount = betAmountOption
+        )
+      case _ =>
+        println("Unknown bet type")
+        return // Beendet die Methode vorzeitig, wenn der Wetttyp unbekannt ist
+    }
+
+    // Bet-Instanz dem Controller hinzufügen
+    controller.addBet(bet)
+  }
 }
