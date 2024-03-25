@@ -80,7 +80,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def quit(): Unit =
     notifyObservers(Event.QUIT)
-  
+
   def addBet(bet: Bet): Boolean = {
     bet.bet_amount match {
       case Some(betAmount) if betAmount > players(bet.player_index.getOrElse(0)).getAvailableMoney =>
@@ -98,29 +98,10 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     }
   }
 
-
-
-  /*def calculateBets(): Vector[String] =
-    val vc = VectorBuilder[String]
-    for (bet <- bets) {
-      bet.bet_type match
-        case "n" =>
-          vc.addOne(num(bet))
-        case "e" =>
-          vc.addOne(evenOdd(bet))
-        case "c" =>
-          vc.addOne(color(bet))
-        case _ =>
-          println("error: bet type " + bet.bet_type)
-    }
-    generateRandomNumber()
-    bets = Vector[Bet]()
-    checkGameEnd()
-    vc.result()*/
   def calculateBets(): Vector[String] = {
     val vc = VectorBuilder[String]()
     for (bet <- bets) {
-      println(s"Debug: bet_type = ${bet.bet_type}") // Debugg
+      //println(s"Debug: bet_type = ${bet.bet_type}") // Debugg
       bet.bet_type match {
         case Some("n") =>
           vc.addOne(num(bet))
@@ -144,23 +125,18 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
   def getRandomNumber: Int =
     randomNumber
 
-  def winBet(playerIndex: Int, bet: Int, winRate: Int, rouletteNumber: Int): String = {
+  def winBet(playerIndex: Int, bet: Int, winRate: Int, rouletteNumber: Int): Either[String, String] = {
     val won_money: Int = bet * winRate
     changeMoney(playerIndex, won_money, true)
-    val retvalue =
-      "Player " + (playerIndex + 1) + " won $" + won_money + " on number " + rouletteNumber +" They now have $" + players(
-        playerIndex).getAvailableMoney + " available."
-    retvalue
+    Right(s"Player " + (playerIndex + 1) + " won $" + won_money + " on number " + rouletteNumber +" They now have $" + players(
+        playerIndex).getAvailableMoney + " available.")
   }
 
-  def loseBet(playerIndex: Int, bet: Int, rouletteNumber: Int): String = {
+  def loseBet(playerIndex: Int, bet: Int, rouletteNumber: Int): Either[String, String] = {
     val lost_money: Int = bet
-    val retval =
-      "Player " + (playerIndex + 1) + " lost $" + lost_money + " on number " + rouletteNumber +" They now have $" + players(
-        playerIndex).getAvailableMoney + " available."
-    retval
+    Right(s"Player " + (playerIndex + 1) + " lost $" + lost_money + " on number " + rouletteNumber +" They now have $" + players(
+        playerIndex).getAvailableMoney + " available.")
   }
-
 
   def changeState(state: State): Unit = {
     this.state = state
@@ -175,23 +151,34 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
   }
 
   def num(bet: Bet): String = {
-    NumExpression(bet).interpret()
+    NumExpression(bet).interpret() match {
+      case Right(successMessage) => successMessage
+      case Left(errorMessage) => errorMessage
+    }
   }
 
   def evenOdd(bet: Bet): String = {
-    EOExpression(bet).interpret()
+    EOExpression(bet).interpret() match {
+      case Right(successMessage) => successMessage
+      case Left(errorMessage) => errorMessage
+    }
   }
 
   def color(bet: Bet): String = {
-    ColorExpression(bet).interpret()
+    ColorExpression(bet).interpret() match {
+      case Right(successMessage) => successMessage
+      case Left(errorMessage) => errorMessage
+    }
   }
 
-  // Interpreter Pattern
+  // Interpreter Pattern + TWO Track Pattern
+
   trait Expression {
-    def interpret(): String
+    def interpret(): Either[String, String]
   }
 
   // für zahlen wetten
+  /*
   class NumExpression(bet: Bet) extends Expression {
     def interpret(): String = {
       (bet.random_number, bet.bet_number, bet.player_index, bet.bet_amount) match {
@@ -204,46 +191,53 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
       }
     }
   }
-
-  // für gerade oder ungerade wetten
-  class EOExpression(bet: Bet) extends Expression {
-    def interpret(): String = {
-      println(s"Debug: bet_odd_or_even = ${bet.bet_odd_or_even}, random_number = ${bet.random_number}, player_index = ${bet.player_index}, bet_amount = ${bet.bet_amount}")
-      (bet.bet_odd_or_even, bet.random_number, bet.player_index, bet.bet_amount) match {
-        case (Some("o"), Some(randNum), Some(playerIdx), Some(betAmount)) if randNum % 2 != 0 =>
-          println(s"Win condition met for odd: randNum = $randNum")
-          println("random Number was: " + randomNumber)
-          winBet(playerIdx, betAmount, 2, randNum)
-        case (Some("e"), Some(randNum), Some(playerIdx), Some(betAmount)) if randNum % 2 == 0 =>
-          println(s"Win condition met for even: randNum = $randNum")
-          println("random Number was: " + randomNumber)
-          winBet(playerIdx, betAmount, 2, randNum)
-        case (Some(_), Some(_), Some(playerIdx), Some(betAmount)) =>
-          println(s"Lose condition met: randNum = ${bet.random_number.getOrElse("N/A")}")
-          println("random Number was: " + randomNumber)
-          loseBet(playerIdx, betAmount, bet.random_number.getOrElse(0))
-        case _ =>
-          "Invalid bet configuration"
-      }
+  */
+  class NumExpression(bet: Bet) extends Expression {
+    def interpret(): Either[String, String] = {
+      //For-Comprehensions zur Entpackung von Monaden
+      for {
+        randNum <- bet.random_number.toRight("Random number not provided") // Entpackt die Option von random_number falls None -> Left Fehlermeldung
+        betNum <- bet.bet_number.toRight("Bet number not provided")
+        playerIdx <- bet.player_index.toRight("Player index not provided")
+        betAmount <- bet.bet_amount.toRight("Bet amount not provided")
+        result <- if (randNum == betNum) winBet(playerIdx, betAmount, 36, randNum) else loseBet(playerIdx, betAmount, randNum)
+      } yield result
     }
   }
 
+  // für gerade oder ungerade wetten
+  class EOExpression(bet: Bet) extends Expression {
+    def interpret(): Either[String, String] = {
+      //For-Comprehensions zur Entpackung von Monaden
+      for {
+        randNum <- bet.random_number.toRight("Random number not provided")
+        playerIdx <- bet.player_index.toRight("Player index not provided")
+        betAmount <- bet.bet_amount.toRight("Bet amount not provided")
+        result <- (bet.bet_odd_or_even, randNum % 2 == 0) match {
+          case (Some("o"), false) | (Some("e"), true) => winBet(playerIdx, betAmount, 2, randNum)
+          case (Some("e"), false) | (Some("o"), true) => loseBet(playerIdx, betAmount, randNum)
+          case _ => Left("Invalid bet configuration")
+        }
+      } yield result
+    }
+  }
 
   // für Farbenwetten
   class ColorExpression(bet: Bet) extends Expression {
     private val redNumbers = Set(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
     private val blackNumbers = Set(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
 
-    def interpret(): String = {
-      (bet.bet_color, bet.random_number, bet.player_index, bet.bet_amount) match {
-        case (Some("r"), Some(randNum), Some(playerIdx), Some(betAmount)) if redNumbers.contains(randNum) =>
-          winBet(playerIdx, betAmount, 2, randNum)
-        case (Some("b"), Some(randNum), Some(playerIdx), Some(betAmount)) if blackNumbers.contains(randNum) =>
-          winBet(playerIdx, betAmount, 2, randNum)
-        case (Some(_), Some(_), Some(playerIdx), Some(betAmount)) =>
-          loseBet(playerIdx, betAmount, randomNumber)
-        case _ =>
-          "Invalid bet configuration"
+    def interpret(): Either[String, String] = {
+      //For-Comprehensions zur Entpackung von Monaden
+      for {
+        randNum <- bet.random_number.toRight("Random number not provided")
+        color <- bet.bet_color.toRight("Bet color not provided")
+        playerIdx <- bet.player_index.toRight("Player index not provided")
+        betAmount <- bet.bet_amount.toRight("Bet amount not provided")
+      } yield {
+        if (color == "r" && redNumbers.contains(randNum)) winBet(playerIdx, betAmount, 2, randNum).merge
+        else if (color == "b" && blackNumbers.contains(randNum)) winBet(playerIdx, betAmount, 2, randNum).merge
+        else loseBet(playerIdx, betAmount, randNum).merge
       }
     }
   }

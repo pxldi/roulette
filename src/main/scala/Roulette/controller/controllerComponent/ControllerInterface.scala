@@ -20,8 +20,8 @@ trait ControllerInterface extends Observable:
   def generateRandomNumber(): Unit
   //def winBet(playerIndex: Int, bet: Int, winRate: Int): String
   //def loseBet(playerIndex: Int, bet: Int): String
-  def winBet(playerIndex: Int, bet: Int, winRate: Int, randomNumber: Int): String
-  def loseBet(playerIndex: Int, bet: Int, randomNumber: Int): String
+  def winBet(playerIndex: Int, bet: Int, winRate: Int, randomNumber: Int): Either[String, String]
+  def loseBet(playerIndex: Int, bet: Int, randomNumber: Int): Either[String, String]
   def changeState(state: State): Unit
   def getState: State
   def printState(): String
