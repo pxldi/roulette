@@ -19,7 +19,6 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
   private val r = new Random()
   var players: Vector[Player] = Vector[Player]()
   var bets: Vector[Bet] = Vector[Bet]()
-  var randomNumber: Int = 0
 
   def setupPlayers(): Unit = {
     val vc = VectorBuilder[Player]
