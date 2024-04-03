@@ -87,9 +87,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
         println("Not enough money available to bet that amount!")
         false
       case Some(betAmount) =>
-        // Zufallszahl setzen, bevor die Wette hinzugefügt wird
-        val updatedBet = bet.copy(random_number = Some(randomNumber))
-        bets = bets :+ updatedBet
+        bets = bets :+ bet
         changeMoney(bet.player_index.getOrElse(0), betAmount, false)
         true
       case None =>
@@ -100,30 +98,24 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def calculateBets(): Vector[String] = {
     val vc = VectorBuilder[String]()
+    val random_number = r.nextInt(37)
     for (bet <- bets) {
-      //println(s"Debug: bet_type = ${bet.bet_type}") // Debugg
-      bet.bet_type match {
+      val updated_bet = bet.copy(random_number=Some(random_number))
+      updated_bet.bet_type match {
         case Some("n") =>
-          vc.addOne(num(bet))
+          vc.addOne(num(updated_bet))
         case Some("e") =>
-          vc.addOne(evenOdd(bet))
+          vc.addOne(evenOdd(updated_bet))
         case Some("c") =>
-          vc.addOne(color(bet))
+          vc.addOne(color(updated_bet))
         case _ =>
-          println("Error: Unknown bet type " + bet.bet_type.getOrElse("unknown"))
+          println("Error: Unknown bet type " + updated_bet.bet_type.getOrElse("unknown"))
       }
     }
-    generateRandomNumber()
     bets = Vector[Bet]()
     checkGameEnd()
     vc.result()
   }
-
-  def generateRandomNumber(): Unit =
-    randomNumber = r.nextInt(37)
-
-  def getRandomNumber: Int =
-    randomNumber
 
   def winBet(playerIndex: Int, bet: Int, winRate: Int, rouletteNumber: Int): Either[String, String] = {
     val won_money: Int = bet * winRate
@@ -177,21 +169,6 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     def interpret(): Either[String, String]
   }
 
-  // für zahlen wetten
-  /*
-  class NumExpression(bet: Bet) extends Expression {
-    def interpret(): String = {
-      (bet.random_number, bet.bet_number, bet.player_index, bet.bet_amount) match {
-        case (Some(randNum), Some(betNum), Some(playerIdx), Some(betAmount)) if randNum == betNum =>
-          winBet(playerIdx, betAmount, 36, randNum)
-        case (Some(_), Some(_), Some(playerIdx), Some(betAmount)) =>
-          loseBet(playerIdx, betAmount, randomNumber)
-        case _ =>
-          "Invalid bet configuration"
-      }
-    }
-  }
-  */
   class NumExpression(bet: Bet) extends Expression {
     def interpret(): Either[String, String] = {
       //For-Comprehensions zur Entpackung von Monaden
