@@ -58,6 +58,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
         try {
           val playerIndex = p.toInt - 1
           val betAmount = a.toInt
+          val randomNumber = controller.randomNumber
           t match
             case "n" =>
               val betNumber = v.toInt
@@ -66,6 +67,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
                 bet_type = Some(t),
                 bet_number = Some(betNumber),
                 bet_amount = Some(betAmount),
+                random_number = Some(randomNumber)
               ))
             case "e" | "c" =>
               Some(Bet(
@@ -74,6 +76,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
                 bet_odd_or_even = if (t == "e") Some(v) else None,
                 bet_color = if (t == "c") Some(v) else None,
                 bet_amount = Some(betAmount),
+                random_number = Some(randomNumber)
               ))
             case _ =>
               println("Invalid bet type.")

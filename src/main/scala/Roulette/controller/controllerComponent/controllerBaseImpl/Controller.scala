@@ -19,6 +19,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
   private val r = new Random()
   var players: Vector[Player] = Vector[Player]()
   var bets: Vector[Bet] = Vector[Bet]()
+  var randomNumber: Int = 0
 
   def setupPlayers(): Unit = {
     val vc = VectorBuilder[Player]
@@ -86,7 +87,9 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
         println("Not enough money available to bet that amount!")
         false
       case Some(betAmount) =>
-        bets = bets :+ bet
+        // Zufallszahl setzen, bevor die Wette hinzugefügt wird
+        val updatedBet = bet.copy(random_number = Some(randomNumber))
+        bets = bets :+ updatedBet
         changeMoney(bet.player_index.getOrElse(0), betAmount, false)
         true
       case None =>
@@ -97,24 +100,29 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def calculateBets(): Vector[String] = {
     val vc = VectorBuilder[String]()
-    val random_number = r.nextInt(37)
     for (bet <- bets) {
-      val updated_bet = bet.copy(random_number=Some(random_number))
-      updated_bet.bet_type match {
+      bet.bet_type match {
         case Some("n") =>
-          vc.addOne(num(updated_bet))
+          vc.addOne(num(bet))
         case Some("e") =>
-          vc.addOne(evenOdd(updated_bet))
+          vc.addOne(evenOdd(bet))
         case Some("c") =>
-          vc.addOne(color(updated_bet))
+          vc.addOne(color(bet))
         case _ =>
-          println("Error: Unknown bet type " + updated_bet.bet_type.getOrElse("unknown"))
+          println("Error: Unknown bet type " + bet.bet_type.getOrElse("unknown"))
       }
     }
+    generateRandomNumber()
     bets = Vector[Bet]()
     checkGameEnd()
     vc.result()
   }
+
+  def generateRandomNumber(): Unit =
+    randomNumber = r.nextInt(37)
+
+  def getRandomNumber: Int =
+    randomNumber
 
   def winBet(playerIndex: Int, bet: Int, winRate: Int, rouletteNumber: Int): Either[String, String] = {
     val won_money: Int = bet * winRate

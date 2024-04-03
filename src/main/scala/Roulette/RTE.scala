@@ -15,6 +15,7 @@ def main(): Unit =
   given FileIOInterface = fIO
   val controller = new Controller
   given ControllerInterface = controller
+  controller.generateRandomNumber()
   controller.setupPlayers()
   val tui = TUI()
   val gui = GUI()
