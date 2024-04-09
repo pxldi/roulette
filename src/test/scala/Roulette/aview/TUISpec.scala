@@ -1,10 +1,7 @@
 package Roulette.aview
 
-import Roulette.aview.tuiComponent.tuiBaseImpl.TUI
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.model.fileIOComponent.FileIOInterface
-import Roulette.model.fileIOComponent.xmlImpl.FileIO
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.VectorBuilder

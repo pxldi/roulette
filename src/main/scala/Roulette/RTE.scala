@@ -4,9 +4,9 @@ import Roulette.aview.guiComponent.guiBaseImpl.GUI
 import Roulette.aview.tuiComponent.tuiBaseImpl.TUI
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.model.fileIOComponent.FileIOInterface
-import Roulette.model.fileIOComponent.xmlImpl.FileIO
-//import Roulette.model.fileIOComponent.jsonImpl.FileIO
+import Roulette.fileIO.FileIOInterface
+import Roulette.fileIO.xmlImpl.FileIO
+//import Roulette.fileIO.jsonImpl.FileIO
 
 @main
 def main(): Unit =

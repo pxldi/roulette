@@ -1,12 +1,9 @@
 package Roulette.controller
 
+import Roulette.{Bet, Player}
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.State.{IDLE, State}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.model.Bet
-import Roulette.model.Player
-import Roulette.model.fileIOComponent.FileIOInterface
-import Roulette.model.fileIOComponent.xmlImpl.FileIO
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.VectorBuilder
