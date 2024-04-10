@@ -5,7 +5,8 @@ import Roulette.controller.controllerComponent.{ControllerInterface, State}
 import Roulette.controller.controllerComponent.State.*
 import Roulette.fileIO.FileIOInterface
 import Roulette.core.{Bet, Player, PlayerUpdate}
-import Roulette.utility.{Event, Observable, UndoManager}
+import Roulette.utility.{Event, Observable}
+import Roulette.controller.UndoManager
 import Roulette.{controller, utility}
 
 import scala.collection.immutable.VectorBuilder
@@ -80,6 +81,19 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
 
   def quit(): Unit =
     notifyObservers(Event.QUIT)
+
+  def createAndAddBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Boolean = {
+    val bet = Bet(
+      player_index = Some(playerIndex),
+      bet_type = Some(betType),
+      bet_number = value,
+      bet_odd_or_even = oddOrEven,
+      bet_color = color,
+      bet_amount = Some(betAmount),
+      random_number = Some(randomNumber),
+    )
+    addBet(bet)
+  }
 
   def addBet(bet: Bet): Boolean = {
     bet.bet_amount match {

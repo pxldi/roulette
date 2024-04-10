@@ -1,4 +1,4 @@
-package Roulette.utility
+package Roulette.controller
 
 trait Command:
   def doStep(): Unit

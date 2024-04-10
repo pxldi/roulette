@@ -16,6 +16,7 @@ trait ControllerInterface extends Observable:
   def save(): Unit
   def load(): Unit
   def quit(): Unit
+  def createAndAddBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Boolean
   def addBet(bet: Bet): Boolean
   def calculateBets(): Vector[String]
   def generateRandomNumber(): Unit

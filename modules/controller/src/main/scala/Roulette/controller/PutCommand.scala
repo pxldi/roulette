@@ -2,7 +2,6 @@ package Roulette.controller
 
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.core.{Bet, Player, PlayerUpdate}
-import Roulette.utility.{Command, UndoManager}
 
 class PutCommand(player_update: PlayerUpdate, controller: Controller) extends Command {
 

@@ -1,8 +1,7 @@
-package Roulette.aview.guiComponent.guiBaseImpl
+package Roulette.userInterface.guiComponent.guiBaseImpl
 
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.core.{Bet, Player, PlayerUpdate}
 import Roulette.utility.{Event, Observer}
 
 import java.awt.{Dimension, Rectangle}
@@ -222,41 +221,40 @@ class GUI()(using controller: ControllerInterface) extends Observer { // extends
 
   private def createBet(): Unit = {
     // Betrag aus dem Textfeld auslesen und als Option speichern, falls es sich in einen Int umwandeln lässt
-    val betAmountOption = try Some(bet_amount_textfield.text.toInt) catch {
-      case _: NumberFormatException => None
+    val bet_amount = try bet_amount_textfield.text.toInt catch {
+      case _: NumberFormatException => println("Invalid bet amount"); return
     }
+    
+    var bet: String = ""
+    var bet_number: Option[Int] = None
+    var bet_odd_or_even: Option[String] = None
+    var bet_color: Option[String] = None
 
     // Basierend auf dem Bettyp die Bet-Instanz mit den entsprechenden Werten erstellen
-    val bet = bet_type match {
+    bet_type match {
       case "n" =>
-        Bet(
-          bet_type = Some("n"),
-          player_index = Some(selected_player),
-          bet_number = try Some(bet_number_textfield.text.toInt) catch {
-            case _: NumberFormatException => None
-          },
-          bet_amount = betAmountOption
-        )
+        bet = "n"
+        bet_number = try Some(bet_number_textfield.text.toInt) catch {
+          case _: NumberFormatException => None
+        }
       case "e" =>
-        Bet(
-          bet_type = Some("e"),
-          player_index = Some(selected_player),
-          bet_odd_or_even = Some(bet_value),
-          bet_amount = betAmountOption
-        )
+        bet = "e"
+        bet_odd_or_even = Some(bet_value)
       case "c" =>
-        Bet(
-          bet_type = Some("c"),
-          player_index = Some(selected_player),
-          bet_color = Some(bet_value),
-          bet_amount = betAmountOption
-        )
+        bet = "c"
+        bet_color = Some(bet_value)
       case _ =>
         println("Unknown bet type")
         return // Beendet die Methode vorzeitig, wenn der Wetttyp unbekannt ist
     }
 
     // Bet-Instanz dem Controller hinzufügen
-    controller.addBet(bet)
+    controller.createAndAddBet(selected_player,
+                              bet, 
+                              bet_number,
+                              bet_odd_or_even,
+                              bet_color,
+                              bet_amount
+                              )
   }
 }

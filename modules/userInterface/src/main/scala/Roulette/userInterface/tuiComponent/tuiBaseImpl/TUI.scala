@@ -1,8 +1,8 @@
-package Roulette.aview.tuiComponent.tuiBaseImpl
+package Roulette.userInterface.tuiComponent.tuiBaseImpl
 
-import Roulette.core.{Bet, Player}
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.core.{Bet, Player}
 import Roulette.utility.{Event, Observer}
 
 import scala.annotation.tailrec
@@ -31,68 +31,52 @@ class TUI()(using controller: ControllerInterface) extends Observer:
   private def loop(): Unit =
     if (!exit)
       analyzeInput(readLine(">>>"))
+      println("test")
       loop()
 
   def analyzeInput(input: String): Unit =
-    processInput(input) match
-      case Some(bet) =>
-        if (controller.addBet(bet))
-          println("Your bet was placed!")
-      case _ =>
+    processInput(input)
 
-  private def processInput(input: String): Option[Bet] =
-    input match
-      case "d" => print(controller.calculateBets()); None
-      case "u" => controller.undo(); None
-      case "r" => controller.redo(); None
-      case "s" => controller.save(); None
-      case "l" => controller.load(); None
-      case "q" => controller.quit(); None
-      case null => None
-      case _ =>
-        processBet(input)
+  private def processInput(input: String): Unit = {
+    input match {
+      case "d" => print(controller.calculateBets())
+      case "u" => controller.undo()
+      case "r" => controller.redo()
+      case "s" => controller.save()
+      case "l" => controller.load()
+      case "q" => controller.quit()
+      case null =>
+      case _ => processBet(input)
+    }
+  }
 
-  private def processBet(input: String): Option[Bet] =
-    input.split(" ").toList match
+  private def processBet(input: String): Unit = {
+    val parts = input.split(" ").toList
+    parts match {
       case p :: t :: v :: a :: Nil =>
         try {
           val playerIndex = p.toInt - 1
           val betAmount = a.toInt
-          val randomNumber = controller.randomNumber
-          t match
-            case "n" =>
-              val betNumber = v.toInt
-              Some(Bet(
-                player_index = Some(playerIndex),
-                bet_type = Some(t),
-                bet_number = Some(betNumber),
-                bet_amount = Some(betAmount),
-                random_number = Some(randomNumber)
-              ))
-            case "e" | "c" =>
-              Some(Bet(
-                player_index = Some(playerIndex),
-                bet_type = Some(t),
-                bet_odd_or_even = if (t == "e") Some(v) else None,
-                bet_color = if (t == "c") Some(v) else None,
-                bet_amount = Some(betAmount),
-                random_number = Some(randomNumber)
-              ))
-            case _ =>
-              println("Invalid bet type.")
-              None
+          val value = if (t == "n") Some(v.toInt) else None
+          val oddOrEven = if (t == "e") Some("o") else if (t == "o") Some("e") else None
+          val color = if (t == "c") Some(v) else None
+
+          val success = controller.createAndAddBet(playerIndex, t, value, oddOrEven, color, betAmount)
+          if (success) {
+            println("Your bet was placed!")
+          } else {
+            println("Failed to place the bet.")
+          }
+
         } catch {
           case _: NumberFormatException =>
             println("Please correct your input!")
-            None
         }
       case _ =>
         println("Invalid input format.")
-        None
+    }
+  }
 
-
-  private def convertToInt(p: String, a: String): Try[(Int, Int)] =
-    Try(p.toInt - 1, a.toInt)
   private def convertToInt(p: String, v: String, a: String): Try[(Int, Int, Int)] =
     Try(p.toInt - 1, v.toInt, a.toInt)
 

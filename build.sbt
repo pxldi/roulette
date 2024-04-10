@@ -1,4 +1,6 @@
 val scala3Version = "3.2.0"
+val akkaHttp = "10.5.0"
+val akkaActor = "2.8.0"
 
 // Common Set of settings for all modules
 lazy val commonSettings = Seq(
@@ -12,7 +14,18 @@ lazy val commonSettings = Seq(
     "org.scalameta" %% "munit" % "0.7.29" % Test,
     "com.lihaoyi" %% "os-lib" % "0.9.0",
     "org.scala-lang.modules" %% "scala-xml" % "2.1.0",
-    ("com.typesafe.play" %% "play-json" % "2.9.3").cross(CrossVersion.for3Use2_13)
+    ("com.typesafe.play" %% "play-json" % "2.9.3").cross(CrossVersion.for3Use2_13),
+    "com.typesafe.akka" %% "akka-http" % akkaHttp,
+    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttp,
+    "com.typesafe.akka" %% "akka-http-core" % akkaHttp,
+    "com.typesafe.akka" %% "akka-actor-typed" % akkaActor,
+    "com.typesafe.akka" %% "akka-stream" % akkaActor,
+    "com.typesafe.akka" %% "akka-actor" % akkaActor,
+    //"ch.qos.logback" % "logback-classic" % "1.2.3"
+    "io.circe" %% "circe-core" % "0.14.1",
+    "io.circe" %% "circe-generic" % "0.14.1",
+    "io.circe" %% "circe-parser" % "0.14.1",
+    //"de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
   ),
   jacocoReportSettings := JacocoReportSettings(
     "Jacoco Coverage Report",
@@ -38,6 +51,7 @@ lazy val fileIO = project
     name := "fileIO",
   )
 
+// TODO: library statt project
 lazy val utility = project
   .in(file("modules/utility"))
   .settings(
@@ -55,7 +69,7 @@ lazy val controller = project
 
 lazy val userInterface = project
   .in(file("modules/userInterface"))
-  .dependsOn(core, controller, utility)
+  .dependsOn(controller, utility)
   .settings(
     commonSettings,
     name := "userInterface",
