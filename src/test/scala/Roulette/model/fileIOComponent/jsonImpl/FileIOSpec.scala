@@ -1,11 +1,11 @@
 package Roulette.model.fileIOComponent.jsonImpl
 
+import Roulette.Bet
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.model.Bet
-import Roulette.model.fileIOComponent.FileIOInterface
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers.*
+
 import scala.collection.immutable.VectorBuilder
 
 class FileIOSpec extends AnyWordSpec {
