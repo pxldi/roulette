@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  frontend-build:
+    image: nielshen/roulette:frontend-latest
+    build:
+      context: ../
+      dockerfile: /modules/userInterface/src/main/scala/Roulette/userInterface/Dockerfile
+    ports:
+      - "8081:8081"
+
+#docker-compose -f .\frontendDeployment.yaml build
+#docker images
+#docker push nielshen/roulette:frontend-latest
