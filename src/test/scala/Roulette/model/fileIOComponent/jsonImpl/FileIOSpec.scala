@@ -1,8 +1,11 @@
 package Roulette.model.fileIOComponent.jsonImpl
 
-import Roulette.Bet
+import Roulette.core.{Bet, Player, PlayerUpdate}
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.core.Bet
+import Roulette.fileIO.jsonImpl.FileIO
+import Roulette.fileIO.FileIOInterface
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers.*
 

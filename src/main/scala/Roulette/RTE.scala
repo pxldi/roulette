@@ -25,3 +25,6 @@ def main(): Unit =
   )
   cliThread.setDaemon(true)
   cliThread.start()
+
+
+//sbt 'set fork in run := true' run

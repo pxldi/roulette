@@ -31,7 +31,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
   private def loop(): Unit =
     if (!exit)
       analyzeInput(readLine(">>>"))
-      println("test")
+      //println("test")
       loop()
 
   def analyzeInput(input: String): Unit =
@@ -72,8 +72,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
           case _: NumberFormatException =>
             println("Please correct your input!")
         }
-      case _ =>
-        println("Invalid input format.")
+      case _ => None
     }
   }
 

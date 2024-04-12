@@ -1,10 +1,12 @@
 package Roulette.model.fileIOComponent.xmlImpl
 
-import Roulette.Bet
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers.*
+import Roulette.fileIO.FileIOInterface
+import Roulette.fileIO.xmlImpl.FileIO
+import Roulette.core.{Bet, Player, PlayerUpdate}
 
 import scala.collection.immutable.VectorBuilder
 

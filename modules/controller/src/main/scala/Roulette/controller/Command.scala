@@ -1,34 +1,37 @@
 package Roulette.controller
 
-trait Command:
+trait Command {
   def doStep(): Unit
   def undoStep(): Unit
   def redoStep(): Unit
+}
 
-class UndoManager:
+class UndoManager {
   private var undoStack: List[Command] = Nil
   private var redoStack: List[Command] = Nil
 
-  def doStep(command: Command): Unit =
+  def doStep(command: Command): Unit = {
     undoStack = command :: undoStack
     command.doStep()
+  }
 
-  def undoStep(): Unit =
+  def undoStep(): Unit = {
     undoStack match {
-      case Nil =>
-      case head :: stack => {
+      case Nil => // Optional: handle empty case
+      case head :: stack =>
         head.undoStep()
         undoStack = stack
         redoStack = head :: redoStack
-      }
     }
+  }
 
-  def redoStep(): Unit =
+  def redoStep(): Unit = {
     redoStack match {
-      case Nil =>
-      case head :: stack => {
+      case Nil => // Optional: handle empty case
+      case head :: stack =>
         head.redoStep()
         redoStack = stack
         undoStack = head :: undoStack
-      }
     }
+  }
+}

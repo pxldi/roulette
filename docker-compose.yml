@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+  roulette-backend:
+    build:
+      context: .
+      dockerfile: /modules/controller/src/main/scala/Roulette/controller/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - roulette-net
+    stdin_open: true  # Hält stdin offen
+    tty: true         # Weist ein Pseudo-TTY zu
+
+  roulette-frontend:
+    build:
+      context: .
+      dockerfile: /modules/userInterface/src/main/scala/Roulette/userInterface/Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - roulette-net
+    depends_on:
+      - roulette-backend
+    stdin_open: true  # Hält stdin offen
+    tty: true         # Pseudo-TTY zuzuweisen
+
+networks:
+  roulette-net:
+
+#docker ps
+#docker attach NAME_CONTAINER

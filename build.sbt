@@ -21,11 +21,14 @@ lazy val commonSettings = Seq(
     "com.typesafe.akka" %% "akka-actor-typed" % akkaActor,
     "com.typesafe.akka" %% "akka-stream" % akkaActor,
     "com.typesafe.akka" %% "akka-actor" % akkaActor,
-    //"ch.qos.logback" % "logback-classic" % "1.2.3"
+    "ch.qos.logback" % "logback-classic" % "1.5.3",
     "io.circe" %% "circe-core" % "0.14.1",
     "io.circe" %% "circe-generic" % "0.14.1",
     "io.circe" %% "circe-parser" % "0.14.1",
     //"de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
+    //"com.typesafe.slick" %% "slick" % "3.5.0",
+    //"ch.qos.logback" % "logback-classic" % "1.5.3"
+    // "org.slf4j" % "slf4j-nop" % "2.0.12"
   ),
   jacocoReportSettings := JacocoReportSettings(
     "Jacoco Coverage Report",

@@ -112,6 +112,47 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     }
   }
 
+  def postBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Boolean = {
+    println(s"Attempting to place a bet for player at index $playerIndex")
+    if (players.isDefinedAt(playerIndex)) {
+      val player = players(playerIndex)
+      println(s"Player found: $player")
+    } else {
+      println("Player index out of bounds!")
+      return false
+    }
+
+    val bet = Bet(
+      player_index = Some(playerIndex),
+      bet_type = Some(betType),
+      bet_number = value,
+      bet_odd_or_even = oddOrEven,
+      bet_color = color,
+      bet_amount = Some(betAmount),
+      random_number = Some(randomNumber)
+    )
+    postAddBet(bet)
+  }
+
+  def postAddBet(bet: Bet): Boolean = {
+    bet.bet_amount match {
+      case Some(betAmount) if betAmount > players(bet.player_index.getOrElse(0)).getAvailableMoney => //TODO : Stateless, Database or JSON to frontend
+        println("Not enough money available to bet that amount!")
+        false
+      case Some(betAmount) =>
+        // Zufallszahl setzen, bevor die Wette hinzugefügt wird
+        val updatedBet = bet.copy(random_number = Some(randomNumber))
+        bets = bets :+ updatedBet //TODO : Stateless, Database or JSON to frontend
+        changeMoney(bet.player_index.getOrElse(0), betAmount, false)
+        print("bet created: ")
+        print(bets)
+        true
+      case None =>
+        println("Bet amount not provided")
+        false
+    }
+  }
+
   def calculateBets(): Vector[String] = {
     val vc = VectorBuilder[String]()
     for (bet <- bets) {
@@ -128,6 +169,26 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
     }
     generateRandomNumber()
     bets = Vector[Bet]()
+    checkGameEnd()
+    vc.result()
+  }
+
+  def getCalculateBets(): Vector[String] = {
+    val vc = VectorBuilder[String]()
+    for (bet <- bets) { //TODO : Stateless, Database or JSON to frontend
+      bet.bet_type match {
+        case Some("n") =>
+          vc.addOne(num(bet))
+        case Some("e") =>
+          vc.addOne(evenOdd(bet))
+        case Some("c") =>
+          vc.addOne(color(bet))
+        case _ =>
+          println("Error: Unknown bet type " + bet.bet_type.getOrElse("unknown"))
+      }
+    }
+    generateRandomNumber()
+    bets = Vector[Bet]() //TODO : Stateless, Database or JSON to frontend
     checkGameEnd()
     vc.result()
   }
@@ -187,7 +248,7 @@ class Controller(using val fIO: FileIOInterface) extends ControllerInterface wit
   // Interpreter Pattern + TWO Track Pattern
 
   trait Expression {
-    def interpret(): Either[String, String]
+    def interpret(): Either[String, String] //TODO: No String, String
   }
 
   class NumExpression(bet: Bet) extends Expression {
