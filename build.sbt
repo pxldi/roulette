@@ -1,4 +1,4 @@
-val scala3Version = "3.2.0"
+val scala3Version = "3.3.1"
 
 // Common Set of settings for all modules
 lazy val commonSettings = Seq(
@@ -45,9 +45,24 @@ lazy val utility = project
     name := "utility",
   )
 
+lazy val db = project
+  .in(file("modules/db"))
+  .dependsOn(core)
+  .settings(
+    commonSettings,
+    name := "db",
+    libraryDependencies ++= Seq(
+      "com.typesafe.slick" %% "slick" % "3.5.0",
+      "com.typesafe.slick" %% "slick-hikaricp" % "3.5.1",
+      "com.zaxxer" % "HikariCP" % "5.1.0",
+      "org.slf4j" % "slf4j-nop" % "2.0.13",
+      "com.h2database" % "h2" % "2.2.224" % Test // For testing
+    )
+  )
+
 lazy val controller = project
   .in(file("modules/controller"))
-  .dependsOn(core, utility, fileIO)
+  .dependsOn(core, utility, fileIO, db)
   .settings(
     commonSettings,
     name := "controller",
@@ -63,8 +78,8 @@ lazy val userInterface = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, fileIO, userInterface, controller, utility)
-  .dependsOn(core, fileIO, userInterface, controller, utility)
+  .aggregate(core, fileIO, userInterface, controller, utility, db)
+  .dependsOn(core, fileIO, userInterface, controller, utility, db)
   .settings(
     commonSettings,
     name := "roulette",
