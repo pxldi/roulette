@@ -3,7 +3,7 @@ package Roulette.core
 import java.util.UUID
 
 case class Bet(
-                id: Option[UUID] = None,
+                id: Option[UUID] = Some(UUID.randomUUID()),
                 bet_type: Option[String] = None,
                 player_id: Option[UUID] = None,
                 bet_number: Option[Int] = None,

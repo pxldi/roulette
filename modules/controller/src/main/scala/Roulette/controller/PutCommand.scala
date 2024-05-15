@@ -11,43 +11,27 @@ class PutCommand(playerId: UUID, money: Int, randomNumber: Int, bets: Vector[Bet
 
   private var oldState: Option[(Vector[Player], Int, Vector[Bet])] = None
 
-  private def backupState(): Future[Unit] = {
-    controller.getPlayers().flatMap { players =>
-      controller.getBets().map { currentBets =>
-        oldState = Some((players, controller.randomNumber, currentBets))
-      }
-    }
+  private def backupState(): Unit = {
+    val currentPlayers = controller.getPlayers
+    val currentBets = controller.getBets
+    oldState = Some((currentPlayers, controller.randomNumber, currentBets))
   }
 
   override def doStep(): Unit = {
-    backupState().onComplete {
-      case Success(_) =>
-        val updateFuture = controller.updatePlayer(playerId, money).map(_ => ())
-        val betsUpdateFuture = controller.setBets(bets)
-
-        // Update the random number
-        controller.randomNumber = randomNumber
-
-        // Ensure all futures complete before considering the step done
-        Future.sequence(List(updateFuture, betsUpdateFuture)).onComplete {
-          case Success(_) => println("Update and bets successfully processed.")
-          case Failure(exception) => println("Failed to process update or bets: " + exception.getMessage)
-        }
-
-      case Failure(exception) =>
-        println("Failed to backup state: " + exception.getMessage)
-    }
+    backupState()
+    controller.updatePlayer(playerId, money)
+    controller.setBets(bets)
+    controller.randomNumber = randomNumber
+    controller.notifyObservers(Event.UPDATE)
   }
 
   override def undoStep(): Unit = {
     oldState.foreach {
       case (players, oldRandomNumber, oldBets) =>
-        controller.setPlayers(players).flatMap { _ =>
-          controller.setBets(oldBets).map { _ =>
-            controller.randomNumber = oldRandomNumber  // Restore the random number
-            controller.notifyObservers(Event.UPDATE)
-          }
-        }
+        controller.setPlayers(players)
+        controller.setBets(oldBets)
+        controller.randomNumber = oldRandomNumber
+        controller.notifyObservers(Event.UPDATE)
     }
   }
 

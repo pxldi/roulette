@@ -37,4 +37,8 @@
     override def getAll: Future[Vector[Player]] = db.run {
       players.result.map(_.toVector)
     }
+
+    override def deleteAll(): Future[Int] = db.run {
+      players.delete
+    }
   }

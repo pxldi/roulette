@@ -10,4 +10,5 @@ trait PlayerDAO {
   def delete(id: UUID): Future[Int]
   def get(id: UUID): Future[Option[Player]]
   def getAll: Future[Vector[Player]]
+  def deleteAll(): Future[Int]
 }

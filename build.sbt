@@ -12,7 +12,15 @@ lazy val commonSettings = Seq(
     "org.scalameta" %% "munit" % "0.7.29" % Test,
     "com.lihaoyi" %% "os-lib" % "0.9.0",
     "org.scala-lang.modules" %% "scala-xml" % "2.1.0",
-    ("com.typesafe.play" %% "play-json" % "2.9.3").cross(CrossVersion.for3Use2_13)
+    "com.typesafe.slick" %% "slick" % "3.5.0",
+    "com.typesafe.slick" %% "slick-hikaricp" % "3.5.1",
+    "com.zaxxer" % "HikariCP" % "5.1.0",
+    "org.slf4j" % "slf4j-nop" % "2.0.13",
+    "com.h2database" % "h2" % "2.2.224" % Test,
+    "org.postgresql" % "postgresql" % "42.2.23",
+    "com.typesafe.slick" %% "slick-codegen" % "3.5.0", // Updated version
+    "com.typesafe" % "config" % "1.4.1",
+    "com.typesafe.play" %% "play-json" % "2.9.3" cross CrossVersion.for3Use2_13
   ),
   jacocoReportSettings := JacocoReportSettings(
     "Jacoco Coverage Report",
@@ -20,6 +28,10 @@ lazy val commonSettings = Seq(
     JacocoThresholds(),
     Seq(JacocoReportFormats.ScalaHTML, JacocoReportFormats.XML), // note XML formatter
     "utf-8"
+  ),
+  javaOptions ++= Seq(
+    "-Xms512M",
+    "-Xmx2G"
   )
 )
 
@@ -51,13 +63,6 @@ lazy val db = project
   .settings(
     commonSettings,
     name := "db",
-    libraryDependencies ++= Seq(
-      "com.typesafe.slick" %% "slick" % "3.5.0",
-      "com.typesafe.slick" %% "slick-hikaricp" % "3.5.1",
-      "com.zaxxer" % "HikariCP" % "5.1.0",
-      "org.slf4j" % "slf4j-nop" % "2.0.13",
-      "com.h2database" % "h2" % "2.2.224" % Test // For testing
-    )
   )
 
 lazy val controller = project
@@ -83,4 +88,7 @@ lazy val root = project
   .settings(
     commonSettings,
     name := "roulette",
+    fork / run := true
   )
+
+//sbt 'set fork in run := true' run

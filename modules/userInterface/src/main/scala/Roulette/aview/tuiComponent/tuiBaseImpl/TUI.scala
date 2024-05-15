@@ -2,17 +2,19 @@ package Roulette.aview.tuiComponent.tuiBaseImpl
 
 import Roulette.core.{Bet, Player}
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
-import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.utility.{Event, Observer}
 
 import scala.annotation.tailrec
-import scala.collection.immutable.VectorBuilder
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.io.StdIn.readLine
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
+import java.util.UUID
 
 class TUI()(using controller: ControllerInterface) extends Observer:
   controller.add(this)
   private var exit = false
+
   override def update(e: Event): Unit =
     e match
       case Event.UPDATE => printTUIState()
@@ -30,91 +32,125 @@ class TUI()(using controller: ControllerInterface) extends Observer:
   @tailrec
   private def loop(): Unit =
     if (!exit)
-      analyzeInput(readLine(">>>"))
+      analyzeInput(readLine(""))
       loop()
 
   def analyzeInput(input: String): Unit =
-    processInput(input) match
-      case Some(bet) =>
-        if (controller.addBet(bet))
-          println("Your bet was placed!")
-      case _ =>
+    processInput(input).foreach { betFuture =>
+      betFuture.onComplete {
+        case Success(success) if success => println("Your bet was placed!")
+        case Success(_) => println("Failed to place bet.")
+        case Failure(exception) => println(s"Error placing bet: ${exception.getMessage}")
+      }
+    }
 
-  private def processInput(input: String): Option[Bet] =
+  private def processInput(input: String): Option[Future[Boolean]] =
     input match
-      case "d" => print(controller.calculateBets()); None
-      case "u" => controller.undo(); None
-      case "r" => controller.redo(); None
-      case "s" => controller.save(); None
-      case "l" => controller.load(); None
-      case "q" => controller.quit(); None
-      case null => None
+      case "d" =>
+        Future {
+          controller.calculateBets()
+        }.map(result => println(result.mkString("\n")))
+        None
+      case "u" =>
+        controller.undo()
+        None
+      case "r" =>
+        controller.redo()
+        None
+      case "s" =>
+        controller.save()
+        None
+      case "l" =>
+        controller.load()
+        None
+      case "q" =>
+        controller.quit()
+        None
+      case null =>
+        None
       case _ =>
-        processBet(input)
+        Some(processBet(input))
 
-  private def processBet(input: String): Option[Bet] =
+  private def processBet(input: String): Future[Boolean] =
     input.split(" ").toList match
       case p :: t :: v :: a :: Nil =>
         try {
           val playerIndex = p.toInt - 1
           val betAmount = a.toInt
-          val randomNumber = controller.randomNumber
-          t match
-            case "n" =>
-              val betNumber = v.toInt
-              Some(Bet(
-                player_index = Some(playerIndex),
-                bet_type = Some(t),
-                bet_number = Some(betNumber),
-                bet_amount = Some(betAmount),
-                random_number = Some(randomNumber)
-              ))
-            case "e" | "c" =>
-              Some(Bet(
-                player_index = Some(playerIndex),
-                bet_type = Some(t),
-                bet_odd_or_even = if (t == "e") Some(v) else None,
-                bet_color = if (t == "c") Some(v) else None,
-                bet_amount = Some(betAmount),
-                random_number = Some(randomNumber)
-              ))
-            case _ =>
-              println("Invalid bet type.")
-              None
+          getPlayerUUID(playerIndex).flatMap { playerUUID =>
+            val betOpt: Option[Bet] = t match
+              case "n" =>
+                val betNumber = v.toInt
+                Some(Bet(
+                  bet_type = Some("n"),
+                  player_id = Some(playerUUID),
+                  bet_number = Some(betNumber),
+                  bet_amount = Some(betAmount)
+                ))
+              case "e" =>
+                Some(Bet(
+                  bet_type = Some("e"),
+                  player_id = Some(playerUUID),
+                  bet_odd_or_even = Some(v),
+                  bet_amount = Some(betAmount)
+                ))
+              case "c" =>
+                Some(Bet(
+                  bet_type = Some("c"),
+                  player_id = Some(playerUUID),
+                  bet_color = Some(v),
+                  bet_amount = Some(betAmount)
+                ))
+              case _ =>
+                println("Invalid bet type.")
+                None
+            betOpt match
+              case Some(bet) => controller.addBet(bet)
+              case None => Future.successful(false)
+          }
         } catch {
           case _: NumberFormatException =>
             println("Please correct your input!")
-            None
+            Future.successful(false)
         }
       case _ =>
         println("Invalid input format.")
-        None
+        Future.successful(false)
 
-
-  private def convertToInt(p: String, a: String): Try[(Int, Int)] =
-    Try(p.toInt - 1, a.toInt)
-  private def convertToInt(p: String, v: String, a: String): Try[(Int, Int, Int)] =
-    Try(p.toInt - 1, v.toInt, a.toInt)
+  private def getPlayerUUID(index: Int): Future[UUID] =
+    Future {
+      controller.getPlayers.lift(index).map(_.id).getOrElse(UUID.randomUUID())
+    }
 
   def printTUIState(): Unit =
-    print("Player 1 : " + "Available money: $" + controller.getPlayers()(0).getAvailableMoney + "\n")
-    print("Player 2 : " + "Available money: $" + controller.getPlayers()(1).getAvailableMoney + "\n")
-    //println("Game State: " + controller.getState)
+    Future {
+      controller.getPlayers
+    }.onComplete {
+      case Success(players) =>
+        players.zipWithIndex.foreach { case (player, index) =>
+          println(s"Player ${index + 1} : Available money: ${player.available_money}")
+        }
+      case Failure(exception) =>
+        println(s"Error fetching players: ${exception.getMessage}")
+    }
+
   def printGameTitle(): Unit =
-    println("""
-            | _____             _      _   _
-            ||  __ \           | |    | | | |
-            || |__) |___  _   _| | ___| |_| |_ ___
-            ||  _  // _ \| | | | |/ _ \ __| __/ _ \
-            || | \ \ (_) | |_| | |  __/ |_| ||  __/
-            ||_|  \_\___/ \__,_|_|\___|\__|\__\___|
-            |""".stripMargin)
+    println(
+      """
+        | _____             _      _   _
+        ||  __ \           | |    | | | |
+        || |__) |___  _   _| | ___| |_| |_ ___
+        ||  _  // _ \| | | | |/ _ \ __| __/ _ \
+        || | \ \ (_) | |_| | |  __/ |_| ||  __/
+        ||_|  \_\___/ \__,_|_|\___|\__|\__\___|
+        |""".stripMargin)
 
   def printInstructions(): Unit =
-    println("""
-            |Instructions: Type...
-            |>>> "[Player number (1 or 2)] [Bet type (n / e / c)] [Bet value (0 - 36 / e or o / r or b)] [bet amount]" to bet.
-            |>>> (u) or (r) to undo or redo respectively.
-            |>>> (d) to stop the betting phase and spin the wheel.
-            |>>> (q) to quit the game.
-            |""".stripMargin)
+    println(
+      """
+        |Instructions: Type...
+        |>>> "[Player number (1 or 2)] [Bet type (n / e / c)] [Bet value (0 - 36 / e or o / r or b)] [bet amount]" to bet.
+        |>>> (u) or (r) to undo or redo respectively.
+        |>>> (d) to stop the betting phase and spin the wheel.
+        |>>> (q) to quit the game.
+        |""".stripMargin)

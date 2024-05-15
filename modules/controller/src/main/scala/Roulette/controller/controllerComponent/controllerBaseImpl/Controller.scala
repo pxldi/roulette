@@ -7,192 +7,232 @@ import Roulette.fileIO.FileIOInterface
 import Roulette.core.{Bet, Player, PlayerUpdate}
 import Roulette.db.dao.{BetDAO, PlayerDAO}
 import Roulette.utility.{Event, Observable, UndoManager}
-import Roulette.{controller, utility}
 
 import scala.collection.immutable.VectorBuilder
-import scala.io.StdIn.readLine
-import scala.util.Random
-import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Random, Success}
+import java.util.UUID
 
-class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val betDao: BetDAO)(
-    implicit ec: ExecutionContext)
-    extends ControllerInterface
-    with Observable {
+class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val betDao: BetDAO)(implicit ec: ExecutionContext)
+  extends ControllerInterface with Observable {
 
-  private var state: State = IDLE
+  private var state: State = State.IDLE
   private val undoManager: UndoManager = new UndoManager
   private val r = new Random()
   var randomNumber: Int = 0
+  var players: Vector[Player] = Vector.empty
+  var bets: Vector[Bet] = Vector.empty
 
   def setupPlayers(): Unit = {
     val initialMoney = 200
-    List.fill(2)(UUID.randomUUID()).foreach { id =>
-      val player = Player(id, initialMoney)
-      playersDao.create(player)
+    players = Vector.fill(2)(Player(UUID.randomUUID(), initialMoney))
+    players.foreach(player => playersDao.create(player))
+    notifyObservers(Event.UPDATE)
+  }
+
+  def updatePlayer(playerId: UUID, money: Int): Unit = {
+    players = players.map {
+      case player if player.id == playerId => player.copy(available_money = money)
+      case player => player
     }
+    notifyObservers(Event.UPDATE)
   }
 
-  def updatePlayer(player_id: UUID, money: Int): Future[Unit] = {
-    playersDao.update(Player(player_id, money)).map { _ =>
-      notifyObservers(Event.UPDATE)
+  def setPlayers(newPlayers: Vector[Player]): Unit = {
+    players = newPlayers
+    notifyObservers(Event.UPDATE)
+  }
+
+  def setBets(newBets: Vector[Bet]): Unit = {
+    bets = newBets
+    notifyObservers(Event.UPDATE)
+  }
+
+  def getBets: Vector[Bet] = bets
+
+  def getPlayers: Vector[Player] = players
+
+  def changeMoney(playerId: UUID, amount: Int, add: Boolean): Unit = {
+    players = players.map {
+      case player if player.id == playerId =>
+        val newAmount = if (add) player.available_money + amount else player.available_money - amount
+        player.copy(available_money = newAmount)
+      case player => player
     }
-  }
-
-  def setPlayers(players: Vector[Player]): Future[Unit] = {
-    for {
-      _ <- playersDao.getAll.flatMap { existingPlayers =>
-        Future.sequence(existingPlayers.map(player => playersDao.delete(player.id)))
-      }
-      _ <- Future.sequence(players.map(player => playersDao.create(player)))
-    } yield ()
-  }
-
-  def setBets(bets: Vector[Bet]): Future[Unit] = {
-    for {
-      _ <- betDao.deleteAll()
-      _ <- Future.sequence(bets.map(bet => betDao.save(bet)))
-    } yield ()
-  }
-
-  def getBets(): Future[Vector[Bet]] = {
-    betDao.getAll
-  }
-
-  def getPlayers(): Future[Vector[Player]] = {
-    playersDao.getAll
-  }
-
-  def changeMoney(playerId: UUID, amount: Int, add: Boolean): Future[Unit] = {
-    playersDao.get(playerId).flatMap {
-      case Some(player) =>
-        val newAmount =
-          if (add) player.available_money + amount else player.available_money - amount
-        playersDao.update(player.copy(available_money = newAmount)).map(_ => ())
-      case None =>
-        Future.failed(new Exception("Player not found"))
-    }
+    notifyObservers(Event.UPDATE)
   }
 
   def checkGameEnd(): Unit = {
-    getPlayers().foreach { players =>
-      val moneyValues = players.map(_.available_money)
-      val gameEndCondition = moneyValues.forall(_ == 0)
-      if (gameEndCondition) {
-        notifyObservers(Event.DRAW)
-        setupPlayers()
-        notifyObservers(Event.UPDATE)
-      } else {
-        players.foreach { player =>
-          if (player.available_money == 0) {
-            val event = if (player == players.head) Event.P1WIN else Event.P2WIN
-            notifyObservers(event)
-            setupPlayers()
-            notifyObservers(Event.UPDATE)
-          }
+    val moneyValues = players.map(_.available_money)
+    val gameEndCondition = moneyValues.exists(_ == 0)
+    if (gameEndCondition) {
+      players.zipWithIndex.foreach { case (player, index) =>
+        if (player.available_money == 0) {
+          val event = if (index == 0) Event.P2WIN else Event.P1WIN
+          notifyObservers(event)
+          setupPlayers()
         }
       }
     }
   }
 
-  def undo(): Unit =
+  def undo(): Unit = {
     undoManager.undoStep()
     notifyObservers(Event.UPDATE)
+  }
 
-  def redo(): Unit =
+  def redo(): Unit = {
     undoManager.redoStep()
     notifyObservers(Event.UPDATE)
+  }
 
   def save(): Unit = {
-    val playersFuture = getPlayers()
-    val betsFuture = getBets()
-
-    for {
-      players <- playersFuture
-      bets <- betsFuture
-    } yield {
-      fIO.save(players, bets)
-    }
+    fIO.save(players, bets)
   }
 
   def load(): Unit = {
-    val (vector_players, vector_bets) = fIO.load()
+    val (vectorPlayers, vectorBets) = fIO.load()
+    players = vectorPlayers
+    bets = vectorBets
+    notifyObservers(Event.UPDATE)
+  }
 
-    val updatePlayersFuture = setPlayers(vector_players)
-    val updateBetsFuture = setBets(vector_bets)
+  def saveToDb(): Future[Unit] = {
+    println("Attempting to save players and bets to the database.")
 
-    // Ensure both futures complete before notifying observers
+    // First, delete all existing records
+    val deletePlayersFuture = playersDao.deleteAll().andThen {
+      case Success(_) => println("Successfully deleted all players.")
+      case Failure(exception) => println(s"Failed to delete players: ${exception.getMessage}")
+    }
+
+    val deleteBetsFuture = betDao.deleteAll().andThen {
+      case Success(_) => println("Successfully deleted all bets.")
+      case Failure(exception) => println(s"Failed to delete bets: ${exception.getMessage}")
+    }
+
+    // Then, save new player records
+    val playerSaveFutures = players.map { player =>
+      println(s"Saving player: $player")
+      playersDao.create(player).andThen {
+        case Success(_) => println(s"Successfully saved player: $player")
+        case Failure(exception) => println(s"Failed to save player: ${exception.getMessage}")
+      }
+    }
+
+    // Finally, save new bet records
+    val betSaveFutures = bets.map { bet =>
+      println(s"Saving bet: $bet")
+      betDao.save(bet).andThen {
+        case Success(_) => println(s"Successfully saved bet: $bet")
+        case Failure(exception) => println(s"Failed to save bet: ${exception.getMessage}")
+      }
+    }
+
+    // Ensure deletion happens first, then saving records
     for {
-      _ <- updatePlayersFuture
-      _ <- updateBetsFuture
+      _ <- deletePlayersFuture
+      _ <- deleteBetsFuture
+      _ <- Future.sequence(playerSaveFutures)
+      _ <- Future.sequence(betSaveFutures)
     } yield {
-      notifyObservers(Event.UPDATE)
+      println("Data saved to database successfully.")
     }
   }
 
-  def quit(): Unit =
-    notifyObservers(Event.QUIT)
 
-  def addBet(bet: Bet): Future[Boolean] = {
+  def loadFromDb(): Future[Unit] = {
+    println("Attempting to load players and bets from the database.")
+
+    val loadPlayersFuture = playersDao.getAll.andThen {
+      case Success(players) =>
+        println(s"Successfully loaded players: $players")
+      case Failure(exception) =>
+        println(s"Failed to load players: ${exception.getMessage}")
+    }
+
+    val loadBetsFuture = betDao.getAll.andThen {
+      case Success(bets) =>
+        println(s"Successfully loaded bets: $bets")
+      case Failure(exception) =>
+        println(s"Failed to load bets: ${exception.getMessage}")
+    }
+
+    for {
+      dbPlayers <- loadPlayersFuture
+      dbBets <- loadBetsFuture
+    } yield {
+      println(s"Assigning loaded players and bets to local variables.")
+      players = dbPlayers
+      bets = dbBets
+
+      println(s"Players: $players")
+      println(s"Bets: $bets")
+
+      notifyObservers(Event.UPDATE)
+      println("Data loaded from database successfully.")
+    }
+  }
+
+
+  def quit(): Unit = {
+    notifyObservers(Event.QUIT)
+  }
+
+  def addBet(bet: Bet): Future[Boolean] = Future {
     bet.bet_amount match {
       case Some(betAmount) =>
         bet.player_id match {
+          case Some(playerId) if betAmount > players.find(_.id == playerId).map(_.getAvailableMoney).getOrElse(0) =>
+            println("Not enough money available to bet that amount!")
+            false
           case Some(playerId) =>
-            playersDao.get(playerId).flatMap {
-              case Some(player) if betAmount <= player.available_money =>
-                val updatedBet = bet.copy(random_number = Some(randomNumber))
-                for {
-                  _ <- betDao.save(updatedBet)
-                  _ <- changeMoney(player.id, betAmount, add = false)
-                } yield true
-              case _ =>
-                println("Not enough money available to bet that amount!")
-                Future.successful(false)
-            }
+            // Set the random number before adding the bet
+            val updatedBet = bet.copy(random_number = Some(randomNumber))
+            bets = bets :+ updatedBet
+            changeMoney(playerId, betAmount, false)
+            true
           case None =>
-            Future.failed(new IllegalArgumentException("Player ID not provided"))
+            println("Player ID not provided")
+            false
         }
       case None =>
         println("Bet amount not provided")
-        Future.successful(false)
+        false
     }
   }
 
-  def calculateBets(): Future[Vector[String]] = {
-    betDao.getAll.flatMap { bets =>
-      val results = bets.map { bet =>
-        bet.bet_type match {
-          case Some("n") => num(bet)
-          case Some("e") => evenOdd(bet)
-          case Some("c") => color(bet)
-          case _ =>
-            Future.successful(s"Error: Unknown bet type ${bet.bet_type.getOrElse("unknown")}")
-        }
-      }
-      Future.sequence(results).flatMap { resultMessages =>
-        generateRandomNumber()
-        betDao.deleteAll().map(_ => resultMessages)
+  def calculateBets(): Vector[String] = {
+    generateRandomNumber()
+    val results = bets.map { bet =>
+      bet.bet_type match {
+        case Some("n") => num(bet)
+        case Some("e") => evenOdd(bet)
+        case Some("c") => color(bet)
+        case _ =>
+          s"Error: Unknown bet type ${bet.bet_type.getOrElse("unknown")}"
       }
     }
+    checkGameEnd()
+    bets = Vector.empty
+    results
   }
 
-  def generateRandomNumber(): Unit =
+  def generateRandomNumber(): Unit = {
     randomNumber = r.nextInt(37)
-
-  def getRandomNumber: Int =
-    randomNumber
-
-  def winBet(playerId: UUID, bet: Int, winRate: Int, rouletteNumber: Int): Future[String] = {
-    val wonMoney: Int = bet * winRate
-    changeMoney(playerId, wonMoney, add = true).map { _ =>
-      s"Player $playerId won $$wonMoney on number $rouletteNumber."
-    }
   }
 
-  def loseBet(playerId: UUID, bet: Int, rouletteNumber: Int): Future[String] = {
-    changeMoney(playerId, bet, add = false).map { _ =>
-      s"Player $playerId lost $$bet on number $rouletteNumber."
-    }
+  def getRandomNumber: Int = randomNumber
+
+  def winBet(playerId: UUID, bet: Int, winRate: Int, rouletteNumber: Int): String = {
+    val wonMoney: Int = bet * winRate
+    changeMoney(playerId, wonMoney, add = true)
+    s"${getPlayerLabel(playerId)} won $wonMoney on number $rouletteNumber."
+  }
+
+  def loseBet(playerId: UUID, bet: Int, rouletteNumber: Int): String = {
+    changeMoney(playerId, bet, add = false)
+    s"${getPlayerLabel(playerId)} lost $bet on number $rouletteNumber."
   }
 
   def changeState(state: State): Unit = {
@@ -207,21 +247,21 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     State.printState(state)
   }
 
-  def num(bet: Bet): Future[String] = Future.successful {
+  def num(bet: Bet): String = {
     NumExpression(bet).interpret() match {
       case Right(successMessage) => successMessage
       case Left(errorMessage) => errorMessage
     }
   }
 
-  def evenOdd(bet: Bet): Future[String] = Future.successful {
+  def evenOdd(bet: Bet): String = {
     EOExpression(bet).interpret() match {
       case Right(successMessage) => successMessage
       case Left(errorMessage) => errorMessage
     }
   }
 
-  def color(bet: Bet): Future[String] = Future.successful {
+  def color(bet: Bet): String = {
     ColorExpression(bet).interpret() match {
       case Right(successMessage) => successMessage
       case Left(errorMessage) => errorMessage
@@ -236,59 +276,57 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
 
   class NumExpression(bet: Bet) extends Expression {
     def interpret(): Either[String, String] = {
-      // For-Comprehensions zur Entpackung von Monaden
       for {
-        randNum <- bet.random_number.toRight(
-          "Random number not provided"
-        ) // Entpackt die Option von random_number falls None -> Left Fehlermeldung
+        randNum <- bet.random_number.toRight("Random number not provided")
         betNum <- bet.bet_number.toRight("Bet number not provided")
         playerID <- bet.player_id.toRight("Player ID not provided")
         betAmount <- bet.bet_amount.toRight("Bet amount not provided")
-        result <-
-          if (randNum == betNum) winBet(playerID, betAmount, 36, randNum)
-          else loseBet(playerID, betAmount, randNum)
-      } yield result
+      } yield {
+        if (randNum == betNum) winBet(playerID, betAmount, 35, randNum)
+        else loseBet(playerID, betAmount, randNum)
+      }
     }
   }
 
-  // für gerade oder ungerade wetten
   class EOExpression(bet: Bet) extends Expression {
     def interpret(): Either[String, String] = {
-      // For-Comprehensions zur Entpackung von Monaden
       for {
         randNum <- bet.random_number.toRight("Random number not provided")
         playerID <- bet.player_id.toRight("Player ID not provided")
         betAmount <- bet.bet_amount.toRight("Bet amount not provided")
-        result <- (bet.bet_odd_or_even, randNum % 2 == 0) match {
+      } yield {
+        (bet.bet_odd_or_even, randNum % 2 == 0) match {
           case (Some("o"), false) | (Some("e"), true) => winBet(playerID, betAmount, 2, randNum)
           case (Some("e"), false) | (Some("o"), true) => loseBet(playerID, betAmount, randNum)
-          case _ => Left("Invalid bet configuration")
+          case _ => "Invalid bet configuration"
         }
-      } yield result
+      }
     }
   }
 
-  // für Farbenwetten
   class ColorExpression(bet: Bet) extends Expression {
-    private val redNumbers =
-      Set(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
-    private val blackNumbers =
-      Set(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
+    private val redNumbers = Set(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+    private val blackNumbers = Set(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
 
     def interpret(): Either[String, String] = {
-      // For-Comprehensions zur Entpackung von Monaden
       for {
         randNum <- bet.random_number.toRight("Random number not provided")
         color <- bet.bet_color.toRight("Bet color not provided")
         playerID <- bet.player_id.toRight("Player ID not provided")
         betAmount <- bet.bet_amount.toRight("Bet amount not provided")
       } yield {
-        if (color == "r" && redNumbers.contains(randNum))
-          winBet(playerID, betAmount, 2, randNum).merge
-        else if (color == "b" && blackNumbers.contains(randNum))
-          winBet(playerID, betAmount, 2, randNum).merge
-        else loseBet(playerID, betAmount, randNum).merge
+        if (color == "r" && redNumbers.contains(randNum)) winBet(playerID, betAmount, 2, randNum)
+        else if (color == "b" && blackNumbers.contains(randNum)) winBet(playerID, betAmount, 2, randNum)
+        else loseBet(playerID, betAmount, randNum)
       }
+    }
+  }
+
+  private def getPlayerLabel(playerId: UUID): String = {
+    players.zipWithIndex.find { case (player, _) => player.id == playerId } match {
+      case Some((_, index)) if index == 0 => "Player 1"
+      case Some((_, index)) if index == 1 => "Player 2"
+      case _ => playerId.toString
     }
   }
 }
