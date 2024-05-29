@@ -20,7 +20,9 @@ lazy val commonSettings = Seq(
     "org.postgresql" % "postgresql" % "42.2.23",
     "com.typesafe.slick" %% "slick-codegen" % "3.5.0", // Updated version
     "com.typesafe" % "config" % "1.4.1",
-    "com.typesafe.play" %% "play-json" % "2.9.3" cross CrossVersion.for3Use2_13
+    "com.typesafe.play" %% "play-json" % "2.9.3" cross CrossVersion.for3Use2_13,
+    "org.reactivemongo" %% "reactivemongo" % "1.1.0-RC10",
+    "io.github.leviysoft" %% "oolong-mongo" % "0.4.0"
   ),
   jacocoReportSettings := JacocoReportSettings(
     "Jacoco Coverage Report",
