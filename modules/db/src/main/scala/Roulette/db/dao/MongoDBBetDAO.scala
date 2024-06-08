@@ -6,7 +6,6 @@ import reactivemongo.api.bson.collection.BSONCollection
 import reactivemongo.api.bson.{BSONDocument, BSONDocumentHandler, Macros}
 
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.UUID
 
 class MongoDBBetDAO(dbName: String, collName: String)(implicit ec: ExecutionContext, connection: MongoConnection) extends BetDAO {
   private def collection: Future[BSONCollection] = connection.database(dbName).map(_.collection(collName))

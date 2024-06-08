@@ -8,7 +8,6 @@ import java.io.{File, PrintWriter}
 import scala.xml.PrettyPrinter
 import scala.xml.XML
 import java.nio.file.{Files, Paths}
-import java.util.UUID
 
 class FileIO extends FileIOInterface {
 
@@ -31,9 +30,9 @@ class FileIO extends FileIOInterface {
       <players>
         {vector_player.map(player =>
         <player>
-          <id>
-            {player.id}
-          </id>
+          <player_index>
+            {player.player_index}
+          </player_index>
           <available_money>
             {player.available_money}
           </available_money>
@@ -43,13 +42,11 @@ class FileIO extends FileIOInterface {
       <bets>
         {vector_bet.map(bet =>
         <bet>
-          <id>
-            {bet.id.getOrElse(UUID.randomUUID())}
-          </id>{/* Generate new UUID if not present */}<bet_type>
-          {bet.bet_type.getOrElse("")}
-        </bet_type>
+          <bet_type>
+            {bet.bet_type.getOrElse("")}
+          </bet_type>
           <player_index>
-            {bet.player_id.getOrElse(0)}
+            {bet.player_index.getOrElse(0)}
           </player_index>
           <bet_number>
             {bet.bet_number.getOrElse(0)}
@@ -76,7 +73,7 @@ class FileIO extends FileIOInterface {
     val playerNodes = (file \ "players" \ "player")
     val players = playerNodes.map(node =>
       Player(
-        id = UUID.fromString((node \ "id").text.trim),
+        player_index = (node \ "player_index").text.trim.toInt,
         available_money = (node \ "available_money").text.trim.toInt
       )
     ).toVector
@@ -84,9 +81,8 @@ class FileIO extends FileIOInterface {
     val betNodes = (file \ "bets" \ "bet")
     val bets = betNodes.map(node =>
       Bet(
-        id = Some(UUID.fromString((node \ "id").text.trim)),
         bet_type = Some((node \ "bet_type").text.trim),
-        player_id = Some(UUID.fromString((node \ "player_id").text.trim)),
+        player_index = Some((node \ "player_index").text.trim.toInt),
         bet_number = Some((node \ "bet_number").text.trim.toInt),
         bet_odd_or_even = Some((node \ "bet_odd_or_even").text.trim),
         bet_color = Some((node \ "bet_color").text.trim),
@@ -97,5 +93,4 @@ class FileIO extends FileIOInterface {
 
     (players, bets)
   }
-
 }

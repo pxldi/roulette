@@ -1,11 +1,8 @@
 package Roulette.core
 
-import java.util.UUID
-
 case class Bet(
-                id: Option[UUID] = Some(UUID.randomUUID()),
                 bet_type: Option[String] = None,
-                player_id: Option[UUID] = None,
+                player_index: Option[Int] = None,
                 bet_number: Option[Int] = None,
                 bet_odd_or_even: Option[String] = None,
                 bet_color: Option[String] = None,
@@ -13,7 +10,7 @@ case class Bet(
                 random_number: Option[Int] = None
               ) {
   def withBetType(bet_type: String): Bet = this.copy(bet_type = Some(bet_type))
-  def withPlayerUUID(player_id: UUID): Bet = this.copy(player_id = Some(player_id))
+  def withPlayerIndex(player_index: Int): Bet = this.copy(player_index = Some(player_index))
   def withBetNumber(bet_number: Int): Bet = this.copy(bet_number = Some(bet_number))
   def withRandomNumber(random_number: Int): Bet = this.copy(random_number = Some(random_number))
   def withOddOrEven(bet_odd_or_even: String): Bet = this.copy(bet_odd_or_even = Some(bet_odd_or_even))
@@ -23,13 +20,12 @@ case class Bet(
 
 object Bet {
   def mapperTo(
-                id: Option[UUID],
                 bet_type: Option[String],
-                player_id: Option[UUID],
+                player_index: Option[Int],
                 bet_number: Option[Int],
                 bet_odd_or_even: Option[String],
                 bet_color: Option[String],
                 bet_amount: Option[Int],
                 random_number: Option[Int]
-              ): Bet = Bet(id, bet_type, player_id, bet_number, bet_odd_or_even, bet_color, bet_amount, random_number)
+              ): Bet = Bet(bet_type, player_index, bet_number, bet_odd_or_even, bet_color, bet_amount, random_number)
 }

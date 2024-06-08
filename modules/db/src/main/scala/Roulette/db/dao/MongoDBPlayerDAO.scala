@@ -6,7 +6,6 @@ import reactivemongo.api.bson.collection.BSONCollection
 import reactivemongo.api.bson.{BSONDocument, BSONDocumentHandler, Macros}
 
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.UUID
 
 class MongoDBPlayerDAO(dbName: String, collName: String)(implicit ec: ExecutionContext, connection: MongoConnection) extends PlayerDAO {
   private def collection: Future[BSONCollection] = connection.database(dbName).map(_.collection(collName))
@@ -18,7 +17,7 @@ class MongoDBPlayerDAO(dbName: String, collName: String)(implicit ec: ExecutionC
   }
 
   def update(player: Player): Future[Int] = {
-    val selector = BSONDocument("id" -> player.id.toString)
+    val selector = BSONDocument("player_index" -> player.player_index)
     val update = BSONDocument(
       "$set" -> BSONDocument(
         "available_money" -> player.available_money
@@ -27,13 +26,13 @@ class MongoDBPlayerDAO(dbName: String, collName: String)(implicit ec: ExecutionC
     collection.flatMap(_.update.one(selector, update)).map(_.nModified)
   }
 
-  def delete(id: UUID): Future[Int] = {
-    val selector = BSONDocument("id" -> id.toString)
+  def delete(playerIndex: Int): Future[Int] = {
+    val selector = BSONDocument("player_index" -> playerIndex)
     collection.flatMap(_.delete().one(selector)).map(_.n)
   }
 
-  def get(id: UUID): Future[Option[Player]] = {
-    val selector = BSONDocument("id" -> id.toString)
+  def get(playerIndex: Int): Future[Option[Player]] = {
+    val selector = BSONDocument("player_index" -> playerIndex)
     collection.flatMap(_.find(selector, Option.empty[Player]).one[Player])
   }
 

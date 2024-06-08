@@ -13,7 +13,6 @@ import Roulette.{controller, utility}
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Random, Success}
-import java.util.UUID
 
 class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val betDao: BetDAO)(implicit ec: ExecutionContext)
   extends ControllerInterface with Observable {
@@ -27,14 +26,14 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
 
   def setupPlayers(): Unit = {
     val initialMoney = 200
-    players = Vector.fill(2)(Player(UUID.randomUUID(), initialMoney))
+    players = Vector.tabulate(2)(index => Player(index, initialMoney))
     players.foreach(player => playersDao.create(player))
     notifyObservers(Event.UPDATE)
   }
 
-  def updatePlayer(playerId: UUID, money: Int): Unit = {
+  def updatePlayer(playerIndex: Int, money: Int): Unit = {
     players = players.map {
-      case player if player.id == playerId => player.copy(available_money = money)
+      case player if player.player_index == playerIndex => player.copy(available_money = money)
       case player => player
     }
     notifyObservers(Event.UPDATE)
@@ -54,9 +53,9 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
 
   def getPlayers: Vector[Player] = players
 
-  def changeMoney(playerId: UUID, amount: Int, add: Boolean): Unit = {
+  def changeMoney(playerIndex: Int, amount: Int, add: Boolean): Unit = {
     players = players.map {
-      case player if player.id == playerId =>
+      case player if player.player_index == playerIndex =>
         val newAmount = if (add) player.available_money + amount else player.available_money - amount
         player.copy(available_money = newAmount)
       case player => player
@@ -142,7 +141,6 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     }
   }
 
-
   def loadFromDb(): Future[Unit] = {
     println("Attempting to load players and bets from the database.")
 
@@ -176,47 +174,43 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     }
   }
 
-
   def quit(): Unit = {
     notifyObservers(Event.QUIT)
   }
 
   def createAndAddBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Future[Boolean] = {
-    // Find the corresponding player UUID
-    val playerUUIDOpt = players.lift(playerIndex).map(_.id)
-
-    playerUUIDOpt match {
-      case Some(playerUUID) =>
-        val bet = Bet(
-          player_id = Some(playerUUID),
-          bet_type = Some(betType),
-          bet_number = value,
-          bet_odd_or_even = oddOrEven,
-          bet_color = color,
-          bet_amount = Some(betAmount),
-          random_number = Some(randomNumber)
-        )
-        addBet(bet)
-      case None =>
-        Future.failed(new IllegalArgumentException(s"Player with index $playerIndex not found"))
+    // Validate the player index
+    if (playerIndex < 0 || playerIndex >= players.length) {
+      Future.failed(new IllegalArgumentException(s"Player with index $playerIndex not found"))
+    } else {
+      val bet = Bet(
+        player_index = Some(playerIndex),
+        bet_type = Some(betType),
+        bet_number = value,
+        bet_odd_or_even = oddOrEven,
+        bet_color = color,
+        bet_amount = Some(betAmount),
+        random_number = Some(randomNumber)
+      )
+      addBet(bet)
     }
   }
 
   def addBet(bet: Bet): Future[Boolean] = Future {
     bet.bet_amount match {
       case Some(betAmount) =>
-        bet.player_id match {
-          case Some(playerId) if betAmount > players.find(_.id == playerId).map(_.getAvailableMoney).getOrElse(0) =>
+        bet.player_index match {
+          case Some(playerIndex) if betAmount > players.lift(playerIndex).map(_.getAvailableMoney).getOrElse(0) =>
             println("Not enough money available to bet that amount!")
             false
-          case Some(playerId) =>
+          case Some(playerIndex) =>
             // Set the random number before adding the bet
             val updatedBet = bet.copy(random_number = Some(randomNumber))
             bets = bets :+ updatedBet
-            changeMoney(playerId, betAmount, false)
+            changeMoney(playerIndex, betAmount, false)
             true
           case None =>
-            println("Player ID not provided")
+            println("Player index not provided")
             false
         }
       case None =>
@@ -247,15 +241,15 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
 
   def getRandomNumber: Int = randomNumber
 
-  def winBet(playerId: UUID, bet: Int, winRate: Int, rouletteNumber: Int): String = {
+  def winBet(playerIndex: Int, bet: Int, winRate: Int, rouletteNumber: Int): String = {
     val wonMoney: Int = bet * winRate
-    changeMoney(playerId, wonMoney, add = true)
-    s"${getPlayerLabel(playerId)} won $wonMoney on number $rouletteNumber."
+    changeMoney(playerIndex, wonMoney, add = true)
+    s"${getPlayerLabel(playerIndex)} won $wonMoney on number $rouletteNumber."
   }
 
-  def loseBet(playerId: UUID, bet: Int, rouletteNumber: Int): String = {
-    changeMoney(playerId, bet, add = false)
-    s"${getPlayerLabel(playerId)} lost $bet on number $rouletteNumber."
+  def loseBet(playerIndex: Int, bet: Int, rouletteNumber: Int): String = {
+    changeMoney(playerIndex, bet, add = false)
+    s"${getPlayerLabel(playerIndex)} lost $bet on number $rouletteNumber."
   }
 
   def changeState(state: State): Unit = {
@@ -294,7 +288,7 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
   // Interpreter Pattern + TWO Track Pattern
 
   trait Expression {
-    def interpret(): Either[String, String] //TODO: No String, String
+    def interpret(): Either[String, String]
   }
 
   class NumExpression(bet: Bet) extends Expression {
@@ -302,11 +296,11 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
       for {
         randNum <- bet.random_number.toRight("Random number not provided")
         betNum <- bet.bet_number.toRight("Bet number not provided")
-        playerID <- bet.player_id.toRight("Player ID not provided")
+        playerIndex <- bet.player_index.toRight("Player index not provided")
         betAmount <- bet.bet_amount.toRight("Bet amount not provided")
       } yield {
-        if (randNum == betNum) winBet(playerID, betAmount, 35, randNum)
-        else loseBet(playerID, betAmount, randNum)
+        if (randNum == betNum) winBet(playerIndex, betAmount, 35, randNum)
+        else loseBet(playerIndex, betAmount, randNum)
       }
     }
   }
@@ -315,12 +309,12 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     def interpret(): Either[String, String] = {
       for {
         randNum <- bet.random_number.toRight("Random number not provided")
-        playerID <- bet.player_id.toRight("Player ID not provided")
+        playerIndex <- bet.player_index.toRight("Player index not provided")
         betAmount <- bet.bet_amount.toRight("Bet amount not provided")
       } yield {
         (bet.bet_odd_or_even, randNum % 2 == 0) match {
-          case (Some("o"), false) | (Some("e"), true) => winBet(playerID, betAmount, 2, randNum)
-          case (Some("e"), false) | (Some("o"), true) => loseBet(playerID, betAmount, randNum)
+          case (Some("o"), false) | (Some("e"), true) => winBet(playerIndex, betAmount, 2, randNum)
+          case (Some("e"), false) | (Some("o"), true) => loseBet(playerIndex, betAmount, randNum)
           case _ => "Invalid bet configuration"
         }
       }
@@ -335,21 +329,22 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
       for {
         randNum <- bet.random_number.toRight("Random number not provided")
         color <- bet.bet_color.toRight("Bet color not provided")
-        playerID <- bet.player_id.toRight("Player ID not provided")
+        playerIndex <- bet.player_index.toRight("Player index not provided")
         betAmount <- bet.bet_amount.toRight("Bet amount not provided")
       } yield {
-        if (color == "r" && redNumbers.contains(randNum)) winBet(playerID, betAmount, 2, randNum)
-        else if (color == "b" && blackNumbers.contains(randNum)) winBet(playerID, betAmount, 2, randNum)
-        else loseBet(playerID, betAmount, randNum)
+        if (color == "r" && redNumbers.contains(randNum)) winBet(playerIndex, betAmount, 2, randNum)
+        else if (color == "b" && blackNumbers.contains(randNum)) winBet(playerIndex, betAmount, 2, randNum)
+        else loseBet(playerIndex, betAmount, randNum)
       }
     }
   }
 
-  private def getPlayerLabel(playerId: UUID): String = {
-    players.zipWithIndex.find { case (player, _) => player.id == playerId } match {
-      case Some((_, index)) if index == 0 => "Player 1"
-      case Some((_, index)) if index == 1 => "Player 2"
-      case _ => playerId.toString
+  private def getPlayerLabel(playerIndex: Int): String = {
+    players.lift(playerIndex) match {
+      case Some(player) if playerIndex == 0 => "Player 1"
+      case Some(player) if playerIndex == 1 => "Player 2"
+      case Some(_) => s"Player $playerIndex"
+      case None => "Unknown player"
     }
   }
 }

@@ -23,11 +23,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import reactivemongo.api.{AsyncDriver, MongoConnection}
 import reactivemongo.api.bson.{BSONDocument, Macros}
 import reactivemongo.api.bson.collection.BSONCollection
-import Roulette.db.dao.{MongoDBBetDAO, MongoDBPlayerDAO}
+import Roulette.db.dao.{MongoDBBetDAO, MongoDBPlayerDAO, SlickBetDAO, SlickPlayerDAO}
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
 import scala.io.StdIn
+import slick.jdbc.JdbcProfile
+import slick.jdbc.PostgresProfile.api._
 
 case class PlayerInfo(index: Int, money: Int)
 case class ApiResponse(status: String, message: String)
@@ -40,23 +43,32 @@ object ControllerApi {
     val fIO = new FileIO
     given FileIOInterface = fIO
 
-    // MongoDB
-    val mongoUri = "mongodb://localhost:27017"
-    val driver = AsyncDriver()
-    val futureParsedUri = MongoConnection.fromString(mongoUri)
-    val dbName = "roulette"
-    val playersCollName = "players"
-    val betsCollName = "bets"
+    val config = ConfigFactory.load()
+    val useSlick = config.getBoolean("db.useSlick")
 
-    val controllerFuture: Future[ControllerInterface] = futureParsedUri.flatMap { parsedUri =>
-      driver.connect(parsedUri).map { conn =>
-        val playersDao = new MongoDBPlayerDAO(dbName, playersCollName)(global, conn)
-        val betDao = new MongoDBBetDAO(dbName, betsCollName)(global, conn)
-        new Controller(using fIO, playersDao, betDao)
+    val controllerFuture = if (useSlick) {
+      // Initialize Slick DAOs
+      val dbConfig = Database.forConfig("db.slick.dbs.default.db")
+      val profile: JdbcProfile = slick.jdbc.PostgresProfile
+      val playersDao = new SlickPlayerDAO(dbConfig)
+      val betDao = new SlickBetDAO(dbConfig)
+      Future.successful(new Controller(using fIO, playersDao, betDao))
+    } else {
+      // Initialize MongoDB DAOs
+      val mongoUri = "mongodb://localhost:27017"
+      val driver = AsyncDriver()
+      val futureParsedUri = MongoConnection.fromString(mongoUri)
+
+      futureParsedUri.flatMap { parsedUri =>
+        driver.connect(parsedUri).map { conn =>
+          val playersDao = new MongoDBPlayerDAO("roulette", "players")(global, conn)
+          val betDao = new MongoDBBetDAO("roulette", "bets")(global, conn)
+          new Controller(using fIO, playersDao, betDao)
+        }
       }
     }
-    
-    // 
+
+    //
 
     val route = concat(
       path("roulette" / "undo") {

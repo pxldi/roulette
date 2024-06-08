@@ -6,7 +6,6 @@ import Roulette.core.{Bet, Player, PlayerUpdate}
 import Roulette.utility.{Event, Observer}
 
 import java.awt.{Dimension, Rectangle}
-import java.util.UUID
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -16,8 +15,8 @@ import scala.util.{Failure, Success}
 
 class GUI()(using controller: ControllerInterface) extends Frame with Observer {
 
-  private var playerUUIDs: Vector[UUID] = Vector.empty
-  private var playerLabels: Map[UUID, String] = Map.empty
+  private var playerIndices: Vector[Int] = Vector.empty
+  private var playerLabels: Map[Int, String] = Map.empty
 
   // UI components
   private val state_label = new Label("Welcome to Roulette!")
@@ -27,7 +26,7 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
   private val bet_amount_textfield = new TextField("0", 4)
   private val bet_number_textfield = new TextField("0", 4)
 
-  private var selected_player: UUID = playerUUIDs.headOption.getOrElse(UUID.randomUUID())
+  private var selected_player: Int = playerIndices.headOption.getOrElse(0)
   private var bet_type = "n"
   private var bet_value = "0"
   private var bet_amount = 0
@@ -66,13 +65,13 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
     // Player Selection
     contents += new BoxPanel(Orientation.Horizontal) {
       contents += Button("Player 1") {
-        if (playerUUIDs.nonEmpty) selected_player = playerUUIDs(0)
+        if (playerIndices.nonEmpty) selected_player = playerIndices(0)
       }
 
       contents += Swing.HStrut(10)
 
       contents += Button("Player 2") {
-        if (playerUUIDs.length > 1) selected_player = playerUUIDs(1)
+        if (playerIndices.length > 1) selected_player = playerIndices(1)
       }
 
       border = Swing.TitledBorder(Swing.EtchedBorder(Swing.Raised), "Choose Player")
@@ -139,7 +138,7 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
         }.onComplete {
           case Success(resultMessages) =>
             Swing.onEDT {
-              result.text = resultMessages.map(replaceUUIDWithPlayerLabel).mkString("\n")
+              result.text = resultMessages.map(replaceIndexWithPlayerLabel).mkString("\n")
             }
           case Failure(exception) =>
             showPopup(s"Error calculating bets: ${exception.getMessage}")
@@ -202,10 +201,10 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
   }.onComplete {
     case Success(players) =>
       Swing.onEDT {
-        playerUUIDs = players.map(_.id)
+        playerIndices = players.indices.toVector
         playerLabels = Map(
-          playerUUIDs(0) -> "Player 1",
-          playerUUIDs(1) -> "Player 2"
+          playerIndices(0) -> "Player 1",
+          playerIndices(1) -> "Player 2"
         )
         updateLabels(players)
       }
@@ -216,7 +215,7 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
   }
 
   private def updateLabels(players: Vector[Player]): Unit = {
-    if (players.nonEmpty && playerUUIDs.nonEmpty) {
+    if (players.nonEmpty && playerIndices.nonEmpty) {
       val player1 = players.headOption
       val player2 = if (players.length > 1) Some(players(1)) else None
 
@@ -225,9 +224,9 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
     }
   }
 
-  private def replaceUUIDWithPlayerLabel(message: String): String = {
-    playerLabels.foldLeft(message) { case (msg, (uuid, label)) =>
-      msg.replace(uuid.toString, label)
+  private def replaceIndexWithPlayerLabel(message: String): String = {
+    playerLabels.foldLeft(message) { case (msg, (index, label)) =>
+      msg.replace(index.toString, label)
     }
   }
 
@@ -286,7 +285,7 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
       case "n" =>
         Bet(
           bet_type = Some("n"),
-          player_id = Some(selected_player),
+          player_index = Some(selected_player),
           bet_number = try Some(bet_number_textfield.text.toInt) catch {
             case _: NumberFormatException => None
           },
@@ -295,14 +294,14 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
       case "e" =>
         Bet(
           bet_type = Some("e"),
-          player_id = Some(selected_player),
+          player_index = Some(selected_player),
           bet_odd_or_even = Some(bet_value),
           bet_amount = Some(betAmount)
         )
       case "c" =>
         Bet(
           bet_type = Some("c"),
-          player_id = Some(selected_player),
+          player_index = Some(selected_player),
           bet_color = Some(bet_value),
           bet_amount = Some(betAmount)
         )
@@ -311,33 +310,26 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
         return
     }
 
-    // Get the player index from the UUID
-    val playerIndexOpt = playerUUIDs.indexOf(selected_player)
-
-    if (playerIndexOpt != -1) {
-      Future {
-        controller.createAndAddBet(playerIndexOpt,
-          bet.bet_type.getOrElse(""),
-          bet.bet_number,
-          bet.bet_odd_or_even,
-          bet.bet_color,
-          bet.bet_amount.getOrElse(0)
-        )
-      }.onComplete {
-        case Success(_) =>
-          Future {
-            controller.getPlayers
-          }.onComplete {
-            case Success(players) => Swing.onEDT { updateLabels(players) }
-            case Failure(exception) => Swing.onEDT { showPopup(s"Error fetching players: ${exception.getMessage}") }
-          }
-        case Failure(exception) =>
-          Swing.onEDT {
-            showPopup(s"Error placing bet: ${exception.getMessage}")
-          }
-      }
-    } else {
-      println("Invalid player selected")
+    Future {
+      controller.createAndAddBet(selected_player,
+        bet.bet_type.getOrElse(""),
+        bet.bet_number,
+        bet.bet_odd_or_even,
+        bet.bet_color,
+        bet.bet_amount.getOrElse(0)
+      )
+    }.onComplete {
+      case Success(_) =>
+        Future {
+          controller.getPlayers
+        }.onComplete {
+          case Success(players) => Swing.onEDT { updateLabels(players) }
+          case Failure(exception) => Swing.onEDT { showPopup(s"Error fetching players: ${exception.getMessage}") }
+        }
+      case Failure(exception) =>
+        Swing.onEDT {
+          showPopup(s"Error placing bet: ${exception.getMessage}")
+        }
     }
   }
 

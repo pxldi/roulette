@@ -4,11 +4,10 @@ import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.controller.Command
 import Roulette.core.{Player, Bet}
 import Roulette.utility.Event
-import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class PutCommand(playerId: UUID, money: Int, randomNumber: Int, bets: Vector[Bet], controller: Controller)(implicit ec: ExecutionContext) extends Command {
+class PutCommand(playerIndex: Int, money: Int, randomNumber: Int, bets: Vector[Bet], controller: Controller)(implicit ec: ExecutionContext) extends Command {
 
   private var oldState: Option[(Vector[Player], Int, Vector[Bet])] = None
 
@@ -20,7 +19,7 @@ class PutCommand(playerId: UUID, money: Int, randomNumber: Int, bets: Vector[Bet
 
   override def doStep(): Unit = {
     backupState()
-    controller.updatePlayer(playerId, money)
+    controller.updatePlayer(playerIndex, money)
     controller.setBets(bets)
     controller.randomNumber = randomNumber
     controller.notifyObservers(Event.UPDATE)

@@ -1,7 +1,6 @@
 package Roulette.userInterface.tuiComponent.tuiBaseImpl
 
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
-import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.core.{Bet, Player}
 import Roulette.utility.{Event, Observer}
 
@@ -10,7 +9,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.StdIn.readLine
 import scala.util.{Failure, Success}
-import java.util.UUID
 
 class TUI()(using controller: ControllerInterface) extends Observer:
   controller.add(this)
@@ -32,7 +30,7 @@ class TUI()(using controller: ControllerInterface) extends Observer:
 
   @tailrec
   private def loop(): Unit =
-    if (!exit)
+    if !exit then
       analyzeInput(readLine(""))
       loop()
 
@@ -75,53 +73,45 @@ class TUI()(using controller: ControllerInterface) extends Observer:
   private def processBet(input: String): Future[Boolean] =
     input.split(" ").toList match
       case p :: t :: v :: a :: Nil =>
-        try {
+        try
           val playerIndex = p.toInt - 1
           val betAmount = a.toInt
-          getPlayerUUID(playerIndex).flatMap { playerUUID =>
-            val betOpt: Option[Bet] = t match
-              case "n" =>
-                val betNumber = v.toInt
-                Some(Bet(
-                  bet_type = Some("n"),
-                  player_id = Some(playerUUID),
-                  bet_number = Some(betNumber),
-                  bet_amount = Some(betAmount)
-                ))
-              case "e" =>
-                Some(Bet(
-                  bet_type = Some("e"),
-                  player_id = Some(playerUUID),
-                  bet_odd_or_even = Some(v),
-                  bet_amount = Some(betAmount)
-                ))
-              case "c" =>
-                Some(Bet(
-                  bet_type = Some("c"),
-                  player_id = Some(playerUUID),
-                  bet_color = Some(v),
-                  bet_amount = Some(betAmount)
-                ))
-              case _ =>
-                println("Invalid bet type.")
-                None
-            betOpt match
-              case Some(bet) => controller.addBet(bet)
-              case None => Future.successful(false)
-          }
-        } catch {
+          val betOpt: Option[Bet] = t match
+            case "n" =>
+              val betNumber = v.toInt
+              Some(Bet(
+                bet_type = Some("n"),
+                player_index = Some(playerIndex),
+                bet_number = Some(betNumber),
+                bet_amount = Some(betAmount)
+              ))
+            case "e" =>
+              Some(Bet(
+                bet_type = Some("e"),
+                player_index = Some(playerIndex),
+                bet_odd_or_even = Some(v),
+                bet_amount = Some(betAmount)
+              ))
+            case "c" =>
+              Some(Bet(
+                bet_type = Some("c"),
+                player_index = Some(playerIndex),
+                bet_color = Some(v),
+                bet_amount = Some(betAmount)
+              ))
+            case _ =>
+              println("Invalid bet type.")
+              None
+          betOpt match
+            case Some(bet) => controller.addBet(bet)
+            case None => Future.successful(false)
+        catch
           case _: NumberFormatException =>
             println("Please correct your input!")
             Future.successful(false)
-        }
       case _ =>
         println("Invalid input format.")
         Future.successful(false)
-
-  private def getPlayerUUID(index: Int): Future[UUID] =
-    Future {
-      controller.getPlayers.lift(index).map(_.id).getOrElse(UUID.randomUUID())
-    }
 
   def printTUIState(): Unit =
     Future {

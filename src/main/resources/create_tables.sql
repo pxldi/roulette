@@ -1,18 +1,16 @@
 -- create_tables.sql
 CREATE TABLE players (
-                         id UUID PRIMARY KEY,
+                         player_index SERIAL PRIMARY KEY,
                          available_money INT
 );
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE bets (
-                      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
                       bet_type VARCHAR,
-                      player_id UUID,
+                      player_index INT,
                       bet_number INTEGER,
                       bet_odd_or_even VARCHAR,
                       bet_color VARCHAR,
                       bet_amount INTEGER,
-                      random_number INTEGER
+                      random_number INTEGER,
+                      FOREIGN KEY (player_index) REFERENCES players(player_index)
 );

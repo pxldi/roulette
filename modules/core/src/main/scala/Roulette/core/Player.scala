@@ -1,21 +1,19 @@
 package Roulette.core
 
-import java.util.UUID
-
-case class Player(id: UUID, available_money: Int) {
+case class Player(player_index: Int, available_money: Int) {
   def getAvailableMoney: Int =
     this.available_money
 
-  override def toString: String = s"Player($id, $available_money)"
+  override def toString: String = s"Player($player_index, $available_money)"
 }
 
 object Player {
-  def apply(id: UUID, available_money: Int): Player = new Player(id, available_money)
+  def apply(player_index: Int, available_money: Int): Player = new Player(player_index, available_money)
 
-  def unapply(player: Player): Option[(UUID, Int)] = Some((player.id, player.available_money))
+  def unapply(player: Player): Option[(Int, Int)] = Some((player.player_index, player.available_money))
 
   def mapperTo(
-    id: UUID,
-    available_money: Int
-  ): Player = Player(id, available_money)
+                player_index: Int,
+                available_money: Int
+              ): Player = Player(player_index, available_money)
 }
