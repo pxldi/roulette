@@ -14,12 +14,12 @@ import scala.util.{Failure, Success}
 
 object TuiClient {
   implicit val system: ActorSystem = ActorSystem()
-  import system.dispatcher // für Futures
+  import system.dispatcher // for Futures
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: scala.concurrent.ExecutionContext = system.dispatcher
 
-  val apiBaseUrl: String = "http://localhost:8080/roulette" //use without Docker
-  //val apiBaseUrl: String = "http://roulette-backend:8080/roulette"
+  val apiBaseUrl: String = "http://localhost:8080/roulette" // use without Docker
+  // val apiBaseUrl: String = "http://roulette-backend:8080/roulette"
 
   def main(args: Array[String]): Unit = {
     printGameTitle()
@@ -37,7 +37,6 @@ object TuiClient {
       }
     }
 
-
     system.terminate()
   }
 
@@ -49,7 +48,7 @@ object TuiClient {
     case "l" => sendHttpRequest("/load", HttpMethods.POST)
     case betCommand if betCommand.startsWith("bet") =>
       println(s"Processing bet command: $betCommand")
-      val betDetails = betCommand.drop(4) // Entfernt "bet" vom Anfang des Strings
+      val betDetails = betCommand.drop(4) // Remove "bet" from the beginning of the string
       sendBetRequest(betDetails)
     case _ => println("Unknown command. Please try again.")
   }
@@ -62,7 +61,9 @@ object TuiClient {
 
     responseFuture.flatMap(response => Unmarshal(response.entity).to[String])
       .onComplete {
-        case Success(content) => println(s"Response from server: $content")
+        case Success(content) =>
+          val results = content.stripPrefix("Vector(").stripSuffix(")").split(", ").toVector
+          results.foreach(println)
         case Failure(exception) => println(s"An error occurred: $exception")
       }
   }
@@ -99,7 +100,7 @@ object TuiClient {
       "betAmount" -> betAmount.toString
     )
 
-    // Econvert to a UTF-8 charset
+    // Convert to a UTF-8 charset
     val requestEntity = formData.toEntity(HttpCharsets.`UTF-8`)
 
     val request = HttpRequest(
@@ -107,7 +108,6 @@ object TuiClient {
       uri = s"$apiBaseUrl/createAndAddBet",
       entity = requestEntity
     )
-
 
     // Send the request using the Akka HTTP client
     Http().singleRequest(request).onComplete {
@@ -145,4 +145,3 @@ object TuiClient {
 
 // sbt "runMain Roulette.userInterface.TuiClient"
 // bet 1 e e 13
-
