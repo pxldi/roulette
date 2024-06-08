@@ -48,7 +48,10 @@ class TUI()(using controller: ControllerInterface) extends Observer:
       case "d" =>
         Future {
           controller.calculateBets()
-        }.map(result => println(result.mkString("\n")))
+        }.onComplete {
+          case Success(result) => result.foreach(println)
+          case Failure(exception) => println(s"Error calculating bets: ${exception.getMessage}")
+        }
         None
       case "u" =>
         controller.undo()
