@@ -278,14 +278,9 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
   }
 
   private def createBet(): Unit = {
-    val bet_amount = try bet_amount_textfield.text.toInt catch {
+    val betAmount = try bet_amount_textfield.text.toInt catch {
       case _: NumberFormatException => println("Invalid bet amount"); return
     }
-
-    var bet: String = ""
-    var bet_number: Option[Int] = None
-    var bet_odd_or_even: Option[String] = None
-    var bet_color: Option[String] = None
 
     val bet = bet_type match {
       case "n" =>
@@ -295,47 +290,54 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
           bet_number = try Some(bet_number_textfield.text.toInt) catch {
             case _: NumberFormatException => None
           },
-          bet_amount = betAmountOption
+          bet_amount = Some(betAmount)
         )
       case "e" =>
         Bet(
           bet_type = Some("e"),
           player_id = Some(selected_player),
           bet_odd_or_even = Some(bet_value),
-          bet_amount = betAmountOption
+          bet_amount = Some(betAmount)
         )
       case "c" =>
         Bet(
           bet_type = Some("c"),
           player_id = Some(selected_player),
           bet_color = Some(bet_value),
-          bet_amount = betAmountOption
+          bet_amount = Some(betAmount)
         )
       case _ =>
         println("Unknown bet type")
         return
     }
 
-    Future {
-      controller.createAndAddBet(selected_player,
-                              bet,
-                              bet_number,
-                              bet_odd_or_even,
-                              bet_color,
-                              bet_amount
-                              )
-    }.onComplete {
-      case Success(_) =>
-        Future {
-          controller.getPlayers
-        }.onComplete {
-          case Success(players) => Swing.onEDT { updateLabels(players) }
-          case Failure(exception) => Swing.onEDT { showPopup(s"Error fetching players: ${exception.getMessage}") }
-        }
-      case Failure(exception) =>
-        Swing.onEDT {
-          showPopup(s"Error placing bet: ${exception.getMessage}")
-        }
+    // Get the player index from the UUID
+    val playerIndexOpt = playerUUIDs.indexOf(selected_player)
+
+    if (playerIndexOpt != -1) {
+      Future {
+        controller.createAndAddBet(playerIndexOpt,
+          bet.bet_type.getOrElse(""),
+          bet.bet_number,
+          bet.bet_odd_or_even,
+          bet.bet_color,
+          bet.bet_amount.getOrElse(0)
+        )
+      }.onComplete {
+        case Success(_) =>
+          Future {
+            controller.getPlayers
+          }.onComplete {
+            case Success(players) => Swing.onEDT { updateLabels(players) }
+            case Failure(exception) => Swing.onEDT { showPopup(s"Error fetching players: ${exception.getMessage}") }
+          }
+        case Failure(exception) =>
+          Swing.onEDT {
+            showPopup(s"Error placing bet: ${exception.getMessage}")
+          }
+      }
+    } else {
+      println("Invalid player selected")
     }
   }
 

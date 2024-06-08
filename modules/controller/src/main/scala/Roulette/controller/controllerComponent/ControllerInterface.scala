@@ -23,7 +23,7 @@ trait ControllerInterface extends Observable:
   def saveToDb(): Future[Unit]
   def loadFromDb(): Future[Unit]
   def quit(): Unit
-  def createAndAddBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Boolean
+  def createAndAddBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Future[Boolean]
   def addBet(bet: Bet): Future[Boolean]
   def calculateBets(): Vector[String]
   def generateRandomNumber(): Unit

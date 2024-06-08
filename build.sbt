@@ -85,7 +85,7 @@ lazy val db = project
 
 lazy val controller = project
   .in(file("modules/controller"))
-  .dependsOn(core, utility, fileIO)
+  .dependsOn(core, utility, fileIO, db)
   .settings(
     commonSettings,
     name := "controller",
