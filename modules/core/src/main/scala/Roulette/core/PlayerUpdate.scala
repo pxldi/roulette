@@ -2,4 +2,6 @@ package Roulette.core
 
 import Roulette.core.Bet
 
-case class PlayerUpdate(player_index: Int, money: Int, bets: Vector[Bet], randomNumber:Int)
+import java.util.UUID
+
+case class PlayerUpdate(player_id: UUID, money: Int, bets: Vector[Bet], randomNumber:Int)

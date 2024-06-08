@@ -18,8 +18,8 @@ object TuiClient {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: scala.concurrent.ExecutionContext = system.dispatcher
 
-  //val apiBaseUrl: String = "http://localhost:8080/roulette" //use without Docker
-  val apiBaseUrl: String = "http://roulette-backend:8080/roulette"
+  val apiBaseUrl: String = "http://localhost:8080/roulette" //use without Docker
+  //val apiBaseUrl: String = "http://roulette-backend:8080/roulette"
 
   def main(args: Array[String]): Unit = {
     printGameTitle()

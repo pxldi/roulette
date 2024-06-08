@@ -1,26 +1,39 @@
 package Roulette.controller
 
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
-import Roulette.core.{Bet, Player, PlayerUpdate}
+import Roulette.controller.Command
+import Roulette.core.{Player, Bet}
+import Roulette.utility.Event
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
-class PutCommand(player_update: PlayerUpdate, controller: Controller) extends Command {
+class PutCommand(playerIndex: Int, money: Int, randomNumber: Int, bets: Vector[Bet], controller: Controller)(implicit ec: ExecutionContext) extends Command {
 
-  private val old_players: Vector[Player] =
-    controller.players
+  private var oldState: Option[(Vector[Player], Int, Vector[Bet])] = None
 
-  private val old_bets: Vector[Bet] =
-    controller.bets
+  private def backupState(): Unit = {
+    val currentPlayers = controller.getPlayers
+    val currentBets = controller.getBets
+    oldState = Some((currentPlayers, controller.randomNumber, currentBets))
+  }
 
-  private val old_randomNumber: Int =
-    controller.randomNumber
-  override def doStep(): Unit =
-    controller.updatePlayer(player_update.player_index, player_update.money)
-  override def undoStep(): Unit =
-    controller.players = old_players
-    controller.bets = old_bets
-    controller.randomNumber = old_randomNumber
-  override def redoStep(): Unit =
-    controller.updatePlayer(player_update.player_index, player_update.money)
-    controller.bets = player_update.bets
-    controller.randomNumber = player_update.randomNumber
+  override def doStep(): Unit = {
+    backupState()
+    controller.updatePlayer(playerIndex, money)
+    controller.setBets(bets)
+    controller.randomNumber = randomNumber
+    controller.notifyObservers(Event.UPDATE)
+  }
+
+  override def undoStep(): Unit = {
+    oldState.foreach {
+      case (players, oldRandomNumber, oldBets) =>
+        controller.setPlayers(players)
+        controller.setBets(oldBets)
+        controller.randomNumber = oldRandomNumber
+        controller.notifyObservers(Event.UPDATE)
+    }
+  }
+
+  override def redoStep(): Unit = doStep()  // Simply re-invoke the doStep to reapply the updates
 }
