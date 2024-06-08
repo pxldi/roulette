@@ -1,4 +1,6 @@
 val scala3Version = "3.3.1"
+val akkaHttp = "10.5.0"
+val akkaActor = "2.8.0"
 
 // Common Set of settings for all modules
 lazy val commonSettings = Seq(
@@ -22,7 +24,21 @@ lazy val commonSettings = Seq(
     "com.typesafe" % "config" % "1.4.1",
     "com.typesafe.play" %% "play-json" % "2.9.3" cross CrossVersion.for3Use2_13,
     "org.reactivemongo" %% "reactivemongo" % "1.1.0-RC10",
-    "io.github.leviysoft" %% "oolong-mongo" % "0.4.0"
+    "io.github.leviysoft" %% "oolong-mongo" % "0.4.0",
+    "com.typesafe.akka" %% "akka-http" % akkaHttp,
+    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttp,
+    "com.typesafe.akka" %% "akka-http-core" % akkaHttp,
+    "com.typesafe.akka" %% "akka-actor-typed" % akkaActor,
+    "com.typesafe.akka" %% "akka-stream" % akkaActor,
+    "com.typesafe.akka" %% "akka-actor" % akkaActor,
+    "ch.qos.logback" % "logback-classic" % "1.5.3",
+    "io.circe" %% "circe-core" % "0.14.1",
+    "io.circe" %% "circe-generic" % "0.14.1",
+    "io.circe" %% "circe-parser" % "0.14.1"
+    //"de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
+    //"com.typesafe.slick" %% "slick" % "3.5.0",
+    //"ch.qos.logback" % "logback-classic" % "1.5.3"
+    // "org.slf4j" % "slf4j-nop" % "2.0.12"
   ),
   jacocoReportSettings := JacocoReportSettings(
     "Jacoco Coverage Report",
@@ -69,7 +85,7 @@ lazy val db = project
 
 lazy val controller = project
   .in(file("modules/controller"))
-  .dependsOn(core, utility, fileIO, db)
+  .dependsOn(core, utility, fileIO)
   .settings(
     commonSettings,
     name := "controller",
@@ -85,12 +101,10 @@ lazy val userInterface = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, fileIO, userInterface, controller, utility, db)
-  .dependsOn(core, fileIO, userInterface, controller, utility, db)
+  .aggregate(core, fileIO, userInterface, controller, utility)
+  .dependsOn(core, fileIO, userInterface, controller, utility)
   .settings(
     commonSettings,
     name := "roulette",
     fork / run := true
   )
-
-//sbt 'set fork in run := true' run

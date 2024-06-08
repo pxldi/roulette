@@ -1,7 +1,7 @@
 package Roulette
 
-import Roulette.aview.guiComponent.guiBaseImpl.GUI
-import Roulette.aview.tuiComponent.tuiBaseImpl.TUI
+import Roulette.userInterface.guiComponent.guiBaseImpl.GUI
+import Roulette.userInterface.tuiComponent.tuiBaseImpl.TUI
 import Roulette.controller.controllerComponent.ControllerInterface
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.fileIO.FileIOInterface
@@ -58,3 +58,6 @@ def main(): Unit = {
       println(s"Failed to connect to MongoDB: ${exception.getMessage}")
   }
 }
+
+
+//sbt 'set fork in run := true' run

@@ -1,7 +1,8 @@
-package Roulette.aview.guiComponent.guiBaseImpl
+package Roulette.userInterface.guiComponent.guiBaseImpl
 
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
-import Roulette.core.{Bet, Player}
+import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.core.{Bet, Player, PlayerUpdate}
 import Roulette.utility.{Event, Observer}
 
 import java.awt.{Dimension, Rectangle}
@@ -277,9 +278,14 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
   }
 
   private def createBet(): Unit = {
-    val betAmountOption = try Some(bet_amount_textfield.text.toInt) catch {
-      case _: NumberFormatException => None
+    val bet_amount = try bet_amount_textfield.text.toInt catch {
+      case _: NumberFormatException => println("Invalid bet amount"); return
     }
+
+    var bet: String = ""
+    var bet_number: Option[Int] = None
+    var bet_odd_or_even: Option[String] = None
+    var bet_color: Option[String] = None
 
     val bet = bet_type match {
       case "n" =>
@@ -311,7 +317,13 @@ class GUI()(using controller: ControllerInterface) extends Frame with Observer {
     }
 
     Future {
-      controller.addBet(bet)
+      controller.createAndAddBet(selected_player,
+                              bet,
+                              bet_number,
+                              bet_odd_or_even,
+                              bet_color,
+                              bet_amount
+                              )
     }.onComplete {
       case Success(_) =>
         Future {

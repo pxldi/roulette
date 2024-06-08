@@ -1,8 +1,9 @@
 package Roulette.controller
 
 import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.controller.Command
 import Roulette.core.{Player, Bet}
-import Roulette.utility.{Command, Event}
+import Roulette.utility.Event
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}

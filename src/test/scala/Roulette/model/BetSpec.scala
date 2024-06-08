@@ -2,7 +2,7 @@ package Roulette.model
 
 //import Roulette.controller.State.{IDLE, State}
 
-import Roulette.{Bet, Player}
+import Roulette.core.{Bet, Player, PlayerUpdate}
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.VectorBuilder

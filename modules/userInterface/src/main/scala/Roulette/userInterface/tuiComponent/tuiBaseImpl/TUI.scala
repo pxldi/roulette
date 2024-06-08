@@ -1,7 +1,8 @@
-package Roulette.aview.tuiComponent.tuiBaseImpl
+package Roulette.userInterface.tuiComponent.tuiBaseImpl
 
-import Roulette.core.{Bet, Player}
 import Roulette.controller.controllerComponent.{ControllerInterface, State}
+import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
+import Roulette.core.{Bet, Player}
 import Roulette.utility.{Event, Observer}
 
 import scala.annotation.tailrec

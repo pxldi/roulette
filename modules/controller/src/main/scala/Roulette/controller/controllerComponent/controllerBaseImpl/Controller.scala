@@ -6,7 +6,9 @@ import Roulette.controller.controllerComponent.State.*
 import Roulette.fileIO.FileIOInterface
 import Roulette.core.{Bet, Player, PlayerUpdate}
 import Roulette.db.dao.{BetDAO, PlayerDAO}
-import Roulette.utility.{Event, Observable, UndoManager}
+import Roulette.utility.{Event, Observable}
+import Roulette.controller.UndoManager
+import Roulette.{controller, utility}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}
@@ -179,6 +181,19 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     notifyObservers(Event.QUIT)
   }
 
+  def createAndAddBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Boolean = {
+    val bet = Bet(
+      player_index = Some(playerIndex),
+      bet_type = Some(betType),
+      bet_number = value,
+      bet_odd_or_even = oddOrEven,
+      bet_color = color,
+      bet_amount = Some(betAmount),
+      random_number = Some(randomNumber),
+    )
+    addBet(bet)
+  }
+
   def addBet(bet: Bet): Future[Boolean] = Future {
     bet.bet_amount match {
       case Some(betAmount) =>
@@ -202,6 +217,47 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     }
   }
 
+  def postBet(playerIndex: Int, betType: String, value: Option[Int], oddOrEven: Option[String], color: Option[String], betAmount: Int): Boolean = {
+    println(s"Attempting to place a bet for player at index $playerIndex")
+    if (players.isDefinedAt(playerIndex)) {
+      val player = players(playerIndex)
+      println(s"Player found: $player")
+    } else {
+      println("Player index out of bounds!")
+      return false
+    }
+
+    val bet = Bet(
+      player_index = Some(playerIndex),
+      bet_type = Some(betType),
+      bet_number = value,
+      bet_odd_or_even = oddOrEven,
+      bet_color = color,
+      bet_amount = Some(betAmount),
+      random_number = Some(randomNumber)
+    )
+    postAddBet(bet)
+  }
+
+  def postAddBet(bet: Bet): Boolean = {
+    bet.bet_amount match {
+      case Some(betAmount) if betAmount > players(bet.player_index.getOrElse(0)).getAvailableMoney => //TODO : Stateless, Database or JSON to frontend
+        println("Not enough money available to bet that amount!")
+        false
+      case Some(betAmount) =>
+        // Zufallszahl setzen, bevor die Wette hinzugefügt wird
+        val updatedBet = bet.copy(random_number = Some(randomNumber))
+        bets = bets :+ updatedBet //TODO : Stateless, Database or JSON to frontend
+        changeMoney(bet.player_index.getOrElse(0), betAmount, false)
+        print("bet created: ")
+        print(bets)
+        true
+      case None =>
+        println("Bet amount not provided")
+        false
+    }
+  }
+
   def calculateBets(): Vector[String] = {
     generateRandomNumber()
     val results = bets.map { bet =>
@@ -216,6 +272,26 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     checkGameEnd()
     bets = Vector.empty
     results
+  }
+
+  def getCalculateBets(): Vector[String] = {
+    val vc = VectorBuilder[String]()
+    for (bet <- bets) { //TODO : Stateless, Database or JSON to frontend
+      bet.bet_type match {
+        case Some("n") =>
+          vc.addOne(num(bet))
+        case Some("e") =>
+          vc.addOne(evenOdd(bet))
+        case Some("c") =>
+          vc.addOne(color(bet))
+        case _ =>
+          println("Error: Unknown bet type " + bet.bet_type.getOrElse("unknown"))
+      }
+    }
+    generateRandomNumber()
+    bets = Vector[Bet]() //TODO : Stateless, Database or JSON to frontend
+    checkGameEnd()
+    vc.result()
   }
 
   def generateRandomNumber(): Unit = {
@@ -271,7 +347,7 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
   // Interpreter Pattern + TWO Track Pattern
 
   trait Expression {
-    def interpret(): Either[String, String]
+    def interpret(): Either[String, String] //TODO: No String, String
   }
 
   class NumExpression(bet: Bet) extends Expression {
