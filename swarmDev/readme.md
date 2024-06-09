@@ -88,7 +88,7 @@ use db-client container:
 
 `psql -h postgres -U poldi -d roulette`
 
-`Password: password`
+Password: password
 
 #### MongoDB:
 use db-client container:
@@ -103,6 +103,10 @@ use db-client container:
 `db.test.insert({name: "test"});`
 
 `db.test.find();`
+
+#### Test Database from outside e.g for Gatling:
+
+`curl -X POST localhost:8080/roulette/saveDB`
 
 #### Kafka:
 `docker exec -it <container id kafka container> bash`
