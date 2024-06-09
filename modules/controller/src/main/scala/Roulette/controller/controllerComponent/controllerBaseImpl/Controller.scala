@@ -278,7 +278,7 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
     }
 
     val producerSettings = ProducerSettings(system, new StringSerializer, new StringSerializer)
-      .withBootstrapServers("localhost:9092") // Kafka server address
+      .withBootstrapServers("kafka:9092") // Kafka server address for Docker: kafka:9092 , for local: localhost:9092
 
     def calculateBetsStreamKafka(): Future[Done] = {
       val source = Source(bets.toVector)

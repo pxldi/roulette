@@ -60,7 +60,7 @@ object ControllerApi {
       Future.successful(new Controller(using fIO, playersDao, betDao))
     } else {
       // Initialize MongoDB DAOs
-      val mongoUri = "mongodb://localhost:27017"
+      val mongoUri = "mongodb://mongo:27017" //Mongo address for Docker: mongodb://mongo:27017/roulette , local: mongodb://localhost:27017
       val driver = AsyncDriver()
       val futureParsedUri = MongoConnection.fromString(mongoUri)
 
@@ -204,8 +204,8 @@ object ControllerApi {
       }
     )
 
-    val bindingFuture = Http().newServerAt("localhost", 8085).bind(route) //use without docker
-    //val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route)
+    //val bindingFuture = Http().newServerAt("localhost", 8085).bind(route) //use without docker
+    val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route)
     //println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
     StdIn.readLine() // Lässt den Server laufen, bis der Benutzer Return drückt
     bindingFuture

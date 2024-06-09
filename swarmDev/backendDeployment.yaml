@@ -1,12 +1,12 @@
 version: '3.7'
 services:
   backend-build:
-    image: localhost:5000/nielshen/roulette:backend-latest
+    image: nielshen/roulette:backend-latest
     build:
       context: ../
-      dockerfile: /modules/controller/src/main/scala/Roulette/controller/Dockerfile
+      dockerfile: ./modules/controller/src/main/scala/Roulette/controller/Dockerfile
     ports:
       - "8080:8080"
-#ohne wsl
+#mit wsl
 #docker-compose -f .\backendDeployment.yaml build
 #docker push nielshen/roulette:backend-latest

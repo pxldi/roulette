@@ -40,8 +40,8 @@ services:
       - roulette-net
     environment:
       - POSTGRES_DB=roulette
-      - POSTGRES_USER=roulette_user
-      - POSTGRES_PASSWORD=roulette_pass
+      - POSTGRES_USER=poldi
+      - POSTGRES_PASSWORD=password
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -51,6 +51,22 @@ services:
       - roulette-net
     volumes:
       - mongo-data:/data/db
+
+  db-client:
+    image: ubuntu:20.04
+    networks:
+      - roulette-net
+    volumes:
+      - ./scripts:/scripts  # Ordner für MongoDB-Skripte
+    tty: true
+    stdin_open: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    entrypoint: /bin/bash
+    command: >
+      -c "apt-get update && apt-get install -y mongodb-clients postgresql-client && sleep infinity"
 
   kafka:
     image: confluentinc/cp-kafka:latest
