@@ -12,18 +12,54 @@ import scala.concurrent.{Await, Future}
 import scala.io.StdIn.readLine
 import scala.util.{Failure, Success}
 
+import akka.kafka.{ConsumerSettings, Subscriptions}
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.serialization.StringDeserializer
+import akka.kafka.scaladsl.Consumer
+
+
 object TuiClient {
   implicit val system: ActorSystem = ActorSystem()
-  import system.dispatcher // for Futures
+  import system.dispatcher // für Futures
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: scala.concurrent.ExecutionContext = system.dispatcher
 
-  val apiBaseUrl: String = "http://localhost:8080/roulette" // use without Docker
-  // val apiBaseUrl: String = "http://roulette-backend:8080/roulette"
+  val apiBaseUrl: String = "http://localhost:8085/roulette" //use without Docker
+  //val apiBaseUrl: String = "http://roulette-backend:8080/roulette" //use with Docker
+
+  val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
+    .withBootstrapServers("localhost:9092")
+    .withGroupId("roulette-group")
+    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+
+  val topics = Subscriptions.topics("roulette-results")
+
+  def consumeResults(): Unit = {
+    val consumerSource = Consumer.plainSource(consumerSettings, topics)
+
+    consumerSource
+      .filter(msg => relevant(msg.value()))
+      .mapAsync(1) { msg =>
+        Future {
+            println(s"Relevant result received: ${msg.value()}")
+            // Logik für Frontend verarbeitung...
+            msg.value()
+        }
+      }.runWith(Sink.ignore)
+  }
+
+  def relevant(message: String): Boolean = {
+    // Beispiellogik: Prüfen, ob die Nachricht ein bestimmtes Schlüsselwort enthält
+    message.contains("Player")
+  }
+
 
   def main(args: Array[String]): Unit = {
     printGameTitle()
     printInstructions()
+
+    // Start consuming results from Kafka
+    consumeResults()
 
     var exit = false
     while (!exit) {
@@ -36,6 +72,7 @@ object TuiClient {
           handleCommand(command)
       }
     }
+
 
     system.terminate()
   }
@@ -76,7 +113,7 @@ object TuiClient {
           val playerIndex = p.toInt - 1
           val betAmount = a.toInt
           val value = if (t == "n") Some(v.toInt) else None
-          val oddOrEven = if (t == "e" || t == "o") Some(t) else None
+          val oddOrEven = if (t == "e") Some(v) else None
           val color = if (t == "c") Some(v) else None
           println(s"Parsed bet request: playerIndex=$playerIndex, betType=$t, value=$value, oddOrEven=$oddOrEven, color=$color, betAmount=$betAmount")
           sendHttpRequest(playerIndex, t, value, oddOrEven, color, betAmount)
@@ -100,7 +137,7 @@ object TuiClient {
       "betAmount" -> betAmount.toString
     )
 
-    // Convert to a UTF-8 charset
+    // Econvert to a UTF-8 charset
     val requestEntity = formData.toEntity(HttpCharsets.`UTF-8`)
 
     val request = HttpRequest(
@@ -108,6 +145,7 @@ object TuiClient {
       uri = s"$apiBaseUrl/createAndAddBet",
       entity = requestEntity
     )
+
 
     // Send the request using the Akka HTTP client
     Http().singleRequest(request).onComplete {
@@ -143,5 +181,6 @@ object TuiClient {
   }
 }
 
-// sbt "runMain Roulette.userInterface.TuiClient"
+// sbt "runMain TuiClient"
 // bet 1 e e 13
+

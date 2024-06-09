@@ -1,6 +1,8 @@
 val scala3Version = "3.3.1"
 val akkaHttp = "10.5.0"
 val akkaActor = "2.8.0"
+val akkaStreamKafka = "3.0.1"
+
 
 // Common Set of settings for all modules
 lazy val commonSettings = Seq(
@@ -30,10 +32,19 @@ lazy val commonSettings = Seq(
     "com.typesafe.akka" %% "akka-http-core" % akkaHttp,
     "com.typesafe.akka" %% "akka-actor-typed" % akkaActor,
     "com.typesafe.akka" %% "akka-stream" % akkaActor,
+    "com.typesafe.akka" %% "akka-stream-kafka" % "4.0.2",
+    "com.typesafe.akka" %% "akka-actor-typed" % akkaActor,
+    "com.typesafe.akka" %% "akka-stream" % akkaActor,
     "com.typesafe.akka" %% "akka-actor" % akkaActor,
     "ch.qos.logback" % "logback-classic" % "1.5.3",
     "io.circe" %% "circe-core" % "0.14.1",
     "io.circe" %% "circe-generic" % "0.14.1",
+    "io.circe" %% "circe-parser" % "0.14.1",
+    "org.apache.kafka" % "kafka-clients" % "3.7.0",
+    //"com.typesafe.akka" %% "akka-stream-kafka" % akkaStreamKafka,
+    //"org.apache.kafka" %% "kafka" % "2.8.0"
+
+
     "io.circe" %% "circe-parser" % "0.14.1"
     //"de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
     //"com.typesafe.slick" %% "slick" % "3.5.0",
@@ -53,6 +64,8 @@ lazy val commonSettings = Seq(
   )
 )
 
+resolvers += "Confluent" at "https://packages.confluent.io/maven/"
+
 lazy val core = project
   .in(file("modules/core"))
   .settings(
@@ -68,6 +81,7 @@ lazy val fileIO = project
     name := "fileIO",
   )
 
+// TODO: library statt project
 lazy val utility = project
   .in(file("modules/utility"))
   .settings(

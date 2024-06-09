@@ -5,6 +5,7 @@ import Roulette.controller.controllerComponent.controllerBaseImpl.Controller
 import Roulette.fileIO.FileIOInterface
 import Roulette.fileIO.xmlImpl.FileIO
 import Roulette.core.{Bet, Player, PlayerUpdate}
+
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
@@ -28,9 +29,12 @@ import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
+import java.io.FileNotFoundException
+import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 import slick.jdbc.JdbcProfile
 import slick.jdbc.PostgresProfile.api._
+import scala.util.{Success, Failure}
 
 case class PlayerInfo(index: Int, money: Int)
 case class ApiResponse(status: String, message: String)
@@ -44,7 +48,8 @@ object ControllerApi {
     given FileIOInterface = fIO
 
     val config = ConfigFactory.load()
-    val useSlick = config.getBoolean("db.useSlick")
+    //val useSlick = config.getBoolean("db.useSlick")
+    val useSlick = true
 
     val controllerFuture = if (useSlick) {
       // Initialize Slick DAOs
@@ -67,8 +72,6 @@ object ControllerApi {
         }
       }
     }
-
-    //
 
     val route = concat(
       path("roulette" / "undo") {
@@ -112,6 +115,28 @@ object ControllerApi {
               complete(StatusCodes.OK, "Game loaded")
             case Failure(exception) =>
               complete(StatusCodes.InternalServerError, s"Failed to initialize controller: ${exception.getMessage}")
+          }
+        }
+      },
+      path("roulette" / "saveDB") {
+        post {
+          onComplete(controllerFuture) {
+            case Success(controller) =>
+              controller.saveToDb()
+              complete(StatusCodes.OK, "Game saved to Database")
+            case Failure(exception) =>
+              complete(StatusCodes.InternalServerError, s"Failed to load from Database: ${exception.getMessage}")
+          }
+        }
+      },
+      path("roulette" / "loadDB") {
+        post {
+          onComplete(controllerFuture) {
+            case Success(controller) =>
+              controller.loadFromDb()
+              complete(StatusCodes.OK, "Game loaded from Database")
+            case Failure(exception) =>
+              complete(StatusCodes.InternalServerError, s"FFailed to load from Database: ${exception.getMessage}")
           }
         }
       },
@@ -161,25 +186,27 @@ object ControllerApi {
       },
       path("roulette" / "getResult") {
         get {
-          onComplete(controllerFuture) {
-            case Success(controller) =>
-              // Rufen Sie die Funktion des Controllers auf und erfassen Sie das Ergebnis
-              val result = controller.calculateBets()
-              println(s"Calculated results: $result")
-
-              // Senden Sie das Ergebnis als HTTP-Response zurück
-              complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, result.toString))
+          onComplete(controllerFuture) { // First check controllerFuture
+            case Success(controller) => // If controller is successfully initialized
+              onComplete(controller.calculateBetsStreamKafka()) { // controller.calculateBetsStreamKafka(), controller.calculateBetsStream()
+                case Success(results) =>
+                  println(s"Calculated results: $results")
+                  complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, results.toString))
+                case Failure(exception) =>
+                  println(s"Failed to calculate results: ${exception.getMessage}")
+                  complete(StatusCodes.InternalServerError, s"Failed to process results: ${exception.getMessage}")
+              }
             case Failure(exception) =>
+              println(s"Failed to initialize controller: ${exception.getMessage}")
               complete(StatusCodes.InternalServerError, s"Failed to initialize controller: ${exception.getMessage}")
           }
         }
       }
     )
 
-    val bindingFuture = Http().newServerAt("localhost", 8080).bind(route) //use without docker
+    val bindingFuture = Http().newServerAt("localhost", 8085).bind(route) //use without docker
     //val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route)
     //println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-    println(s"Server online at http://0.0.0.0:8080/\nPress RETURN to stop...")
     StdIn.readLine() // Lässt den Server laufen, bis der Benutzer Return drückt
     bindingFuture
       .flatMap(_.unbind()) // Löst die Bindung vom Port
@@ -188,8 +215,9 @@ object ControllerApi {
 }
 // wsl
 // 1. Ordner mit build.sbt
-// sbt "runMain Roulette.controller.controllerApi"
+// sbt "runMain Roulette.controller.ControllerApi"
 
 //second terminal
 //wsl
 //curl -X POST -i http://localhost:8080/roulette/setupPlayers
+
