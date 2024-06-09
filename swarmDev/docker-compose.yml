@@ -40,10 +40,11 @@ services:
       - roulette-net
     environment:
       - POSTGRES_DB=roulette
-      - POSTGRES_USER=roulette_user #roulette_user
-      - POSTGRES_PASSWORD=roulette_pass    #roulette_pass
+      - POSTGRES_USER=roulette_user
+      - POSTGRES_PASSWORD=roulette_pass
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d #or paste .sql file manually in db-client container
 
   mongo:
     image: mongo:latest

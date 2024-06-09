@@ -49,7 +49,7 @@ object ControllerApi {
 
     val config = ConfigFactory.load()
     //val useSlick = config.getBoolean("db.useSlick")
-    val useSlick = true
+    val useSlick = false // false -> MongoDB
 
     val controllerFuture = if (useSlick) {
       // Initialize Slick DAOs

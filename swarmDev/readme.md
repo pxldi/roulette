@@ -19,7 +19,7 @@ Place a Bet:
 
 ## API Endpoints
 ```bash
-curl -X POST -i http://localhost:8085/roulette/setupPlayers
+curl -X POST http://localhost:8080/roulette/setupPlayers
 curl -X GET http://localhost:8080/roulette/getResult
 curl -X POST http://localhost:8080/roulette/save
 curl -X POST http://localhost:8080/roulette/load
@@ -80,19 +80,27 @@ detach: CTRL + q
 
 #### PostgreSQL:
 use db-client container:
-`docker exec -it <container ID> bash`
+`docker exec -it <container ID Ubuntu db-client> bash`
 
 `apt-get update && apt-get install curl -y`
 
 `curl -X POST http://roulette-backend:8080/roulette/saveDB`
 
-`psql -h postgres -U poldi -d roulette`
+`psql -h postgres -U roulette_user -d roulette`
 
-Password: password
+Password: `roulette_pass`
+
+`\dt`
+
+`SELECT * FROM players;`
+
+`DELETE FROM players;`
+
 
 #### MongoDB:
+##### Test DB Connection
 use db-client container:
-`docker exec -it <container ID Mongo DB> bash`
+`docker exec -it <container ID Ubuntu db-client> bash`
 
 (mongo mongodb://mongo:27017/roulette)
 
@@ -103,6 +111,27 @@ use db-client container:
 `db.test.insert({name: "test"});`
 
 `db.test.find();`
+
+
+
+##### Test DB Insertion From Frontend
+
+`docker exec -it <MongoDB container> bash`
+
+`apt-get update`
+`apt-get install -y mongodb-mongosh`
+
+`mongosh`
+
+`show dbs`
+
+`use roulette`
+
+`show collections`
+
+`db.players.find()`
+
+
 
 #### Test Database from outside e.g for Gatling:
 
