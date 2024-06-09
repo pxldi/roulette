@@ -282,7 +282,7 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
 
     def calculateBetsStreamKafka(): Future[Done] = {
       val source = Source(bets.toVector)
-
+      println("Calculating Bet Stream and send it to Kafka")
       // Processing each bet based on its type in a flow
       val flow = Flow[Bet].map {
         case bet if bet.bet_type.contains("n") => num(bet)

@@ -83,6 +83,8 @@ object TuiClient {
     case "r" => sendHttpRequest("/redo", HttpMethods.POST)
     case "s" => sendHttpRequest("/save", HttpMethods.POST)
     case "l" => sendHttpRequest("/load", HttpMethods.POST)
+    case "sdb" => sendHttpRequest("/saveDB", HttpMethods.POST)
+    case "ldb" => sendHttpRequest("/loadDB", HttpMethods.POST)
     case betCommand if betCommand.startsWith("bet") =>
       println(s"Processing bet command: $betCommand")
       val betDetails = betCommand.drop(4) // Remove "bet" from the beginning of the string

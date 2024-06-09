@@ -6,7 +6,7 @@ Go to directory with `build.sbt`
 
 Start Frontend and Backend:
 
-`sbt "runMain Roulette.controller.ControllerApi`
+`sbt "runMain Roulette.controller.ControllerApi"`
 
 `sbt "runMain TuiClient"`
 
@@ -67,15 +67,24 @@ Go to Directory /swarmDev
 ## Test Frontend, Database, Kafka Inside Docker
 
 #### Frontend
-`docker attach <container id Frontend>`
+`docker exec -it <container id Frontend> bash`
 
 `bet 1 e e 13`
 
 `d`
 
+#### Backend
+`docker attach <container id Backend> `
+
+detach: CTRL + q
+
 #### PostgreSQL:
 use db-client container:
 `docker exec -it <container ID> bash`
+
+`apt-get update && apt-get install curl -y`
+
+`curl -X POST http://roulette-backend:8080/roulette/saveDB`
 
 `psql -h postgres -U poldi -d roulette`
 
@@ -83,7 +92,7 @@ use db-client container:
 
 #### MongoDB:
 use db-client container:
-`docker exec -it <container ID> bash`
+`docker exec -it <container ID Mongo DB> bash`
 
 (mongo mongodb://mongo:27017/roulette)
 
@@ -96,7 +105,7 @@ use db-client container:
 `db.test.find();`
 
 #### Kafka:
-docker attach [container id kafka container]
+`docker exec -it <container id kafka container> bash`
 
 `kafka-console-producer.sh --broker-list kafka:9092 --topic test`
 

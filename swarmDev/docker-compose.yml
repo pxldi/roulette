@@ -40,8 +40,8 @@ services:
       - roulette-net
     environment:
       - POSTGRES_DB=roulette
-      - POSTGRES_USER=poldi
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=roulette_user #roulette_user
+      - POSTGRES_PASSWORD=roulette_pass    #roulette_pass
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -56,8 +56,6 @@ services:
     image: ubuntu:20.04
     networks:
       - roulette-net
-    volumes:
-      - ./scripts:/scripts  # Ordner für MongoDB-Skripte
     tty: true
     stdin_open: true
     deploy:
