@@ -257,7 +257,7 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
       // Creating a source from the bets vector
       val source = Source(bets.toVector)
 
-      // Processing each bet based on its type in a flow
+      // Processing each bet in a flow
       val flow = Flow[Bet].map {
         case bet if bet.bet_type.contains("n") => num(bet)
         case bet if bet.bet_type.contains("e") => evenOdd(bet)
@@ -272,7 +272,7 @@ class Controller(using val fIO: FileIOInterface, val playersDao: PlayerDAO, val 
       source.via(flow).runWith(sink).andThen {
         case _ =>
           generateRandomNumber()
-          bets = Vector.empty // Clearing bets after processing
+          bets = Vector.empty
           checkGameEnd()
       }
     }

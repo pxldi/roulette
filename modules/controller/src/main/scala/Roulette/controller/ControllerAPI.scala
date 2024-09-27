@@ -188,7 +188,7 @@ object ControllerApi {
         get {
           onComplete(controllerFuture) { // First check controllerFuture
             case Success(controller) => // If controller is successfully initialized
-              onComplete(controller.calculateBetsStreamKafka()) { // controller.calculateBetsStreamKafka(), controller.calculateBetsStream()
+              onComplete(controller.calculateBetsStream()) { // controller.calculateBetsStreamKafka(), controller.calculateBetsStream()
                 case Success(results) =>
                   println(s"Calculated results: $results")
                   complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, results.toString))
@@ -204,8 +204,8 @@ object ControllerApi {
       }
     )
 
-    //val bindingFuture = Http().newServerAt("localhost", 8085).bind(route) //use without docker
-    val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route)
+    val bindingFuture = Http().newServerAt("localhost", 8085).bind(route) //use without docker
+    //val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route)
     //println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
     StdIn.readLine() // Lässt den Server laufen, bis der Benutzer Return drückt
     bindingFuture

@@ -24,11 +24,12 @@ object TuiClient {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: scala.concurrent.ExecutionContext = system.dispatcher
 
-  //val apiBaseUrl: String = "http://localhost:8085/roulette" //use without Docker
-  val apiBaseUrl: String = "http://roulette-backend:8080/roulette" //use with Docker
+  val apiBaseUrl: String = "http://localhost:8085/roulette" //use without Docker
+  //val apiBaseUrl: String = "http://roulette-backend:8080/roulette" //use with Docker
+  // Kafka server address for Docker: kafka:9092 , for local: localhost:9092
 
   val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
-    .withBootstrapServers("kafka:9092") // Kafka server address for Docker: kafka:9092 , for local: localhost:9092
+    .withBootstrapServers("kafka:9092")
     .withGroupId("roulette-group")
     .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
@@ -42,14 +43,13 @@ object TuiClient {
       .mapAsync(1) { msg =>
         Future {
             println(s"Relevant result received: ${msg.value()}")
-            // Logik für Frontend verarbeitung...
             msg.value()
         }
       }.runWith(Sink.ignore)
   }
 
   def relevant(message: String): Boolean = {
-    // Beispiellogik: Prüfen, ob die Nachricht ein bestimmtes Schlüsselwort enthält
+    // Prüfen ob Nachricht Schlüsselwort Player enthält
     message.contains("Player")
   }
 
